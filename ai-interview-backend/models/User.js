@@ -4,12 +4,24 @@ import crypto from "crypto";
 const userSchema = new mongoose.Schema({
   name: String,
   email: { type: String, unique: true },
-  password: {type:String,
+  password: String,
+  avatar: String,
+
+  role: { type: String, enum: ["user", "admin"], default: "user" },
+  plan: { type: String, enum: ["free", "pro", "enterprise"], default: "free" },
+  planExpiresAt: Date,
+
+  subscriptionId: String,
+  usage: {
+    interviewsConducted: { type: Number, default: 0 },
+    answersEvaluated: { type: Number, default: 0 },
+    feedbacksGenerated: { type: Number, default: 0 },
   },
-  plan: { type: String, default: "free" },
+
   resetPasswordToken: String,
   resetPasswordExpire: Date,
-});
+}, { timestamps: true });
+
 
 
 userSchema.methods.getResetPasswordToken = function () {

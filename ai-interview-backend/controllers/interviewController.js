@@ -117,3 +117,15 @@ Do NOT include markdown, code fences, or any text.`;
     res.status(500).json({ message: "Evaluation failed" });
   }
 };
+
+
+export const getInterviewById = async (req, res) => {
+  const interview = await Interview.findById(req.params.id).populate("user", "name email");
+  if (!interview) return res.status(404).json({ message: "Interview not found" });
+  res.json(interview);
+};
+
+export const getUserInterviews = async (req, res) => {
+  const interviews = await Interview.find({ user: req.user._id }).sort({ createdAt: -1 });
+  res.json(interviews);
+};
