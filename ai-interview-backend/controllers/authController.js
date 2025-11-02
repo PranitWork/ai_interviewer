@@ -22,12 +22,14 @@ export const registerUser = async (req, res) => {
       name,
       email: normalizedEmail,
       password: hashedPassword,
+      role:"user",
     });
 
     res.cookie("token", generateToken(user._id), {
       httpOnly: true,
       secure: true,
       sameSite: "None",
+  
     });
 
     res.status(201).json({

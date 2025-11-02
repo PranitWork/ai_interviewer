@@ -1,5 +1,6 @@
 import openai from "../utils/openaiClient.js";
 import Interview from "../models/Interview.js";
+import User from "../models/User.js";
 
 // 🔹 Universal cleaner for any GPT output (removes code blocks, markdown, junk)
 function cleanAIResponse(str) {
@@ -57,6 +58,10 @@ Do NOT include markdown, code fences, or extra text.`;
       role,
       questions,
     });
+      await User.findByIdAndUpdate(req.user._id, {
+      $inc: { "usage.interviewsConducted": 1 },
+    });
+
 
     res.json(interview);
   } catch (error) {
@@ -110,6 +115,10 @@ Do NOT include markdown, code fences, or any text.`;
     const interview = await Interview.findById(interviewId);
     interview.answers.push({ question, answer, feedback });
     await interview.save();
+
+       await User.findByIdAndUpdate(req.user._id, {
+      $inc: { "usage.answersEvaluated": 1 },
+    });
 
     res.json({ feedback });
   } catch (error) {

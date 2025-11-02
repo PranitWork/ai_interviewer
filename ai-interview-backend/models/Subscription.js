@@ -1,16 +1,16 @@
 import mongoose from "mongoose";
 
-const subscriptionSchema = new mongoose.Schema({
-  user: { type: mongoose.Schema.Types.ObjectId, ref: "User" },
-  plan: { type: String, enum: ["free", "pro", "enterprise"], default: "free" },
-  priceId: String, // Stripe or Razorpay price ID
-  paymentId: String,
-  startDate: { type: Date, default: Date.now },
-  endDate: Date,
-  status: { type: String, enum: ["active", "expired", "cancelled"], default: "active" },
-}, { timestamps: true });
+const subscriptionSchema = new mongoose.Schema(
+  {
+    user: { type: mongoose.Schema.Types.ObjectId, ref: "User", required: true },
+    plan: { type: String, enum: ["free", "pro", "enterprise"], default: "free" },
+    razorpayOrderId: String,
+    razorpayPaymentId: String,
+    razorpaySubscriptionId: String, // optional if using Razorpay subscriptions
+    status: { type: String, default: "inactive" }, // active, canceled, expired
+    currentPeriodEnd: Date,
+  },
+  { timestamps: true }
+);
 
-const Subscription = mongoose.model("Subscription", subscriptionSchema);
-
-
-export default Subscription;
+export default mongoose.model("Subscription", subscriptionSchema);
