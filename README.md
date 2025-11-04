@@ -166,3 +166,126 @@ Build a **production-ready AI Interview SaaS** with:
 - 📉 AI learning curve tracking  
 
 ---
+
+## FRONTEND FOLDER STRUCTURE REFERENCE  
+
+src/
+├── app/                                 # Next.js app router pages & layouts
+│   ├── (public)/                        # Public pages (unauthenticated)
+│   │   ├── pricing/page.js
+│   │   ├── login/page.js
+│   │   ├── register/page.js
+│   │   ├── forgot-password/page.js
+│   │   ├── reset-password/[token]/page.js
+│   │   ├── loading.js                   # Route loading state
+│   │   └── error.js                     # Route-level error boundary
+│   │   ├── page.js                      # Landing page
+│   │   ├── layout.js                    # Navbar + Footer layout
+│   │
+│   ├── (dashboard)/                     # Authenticated user dashboard
+│   │   ├── layout.js                    # Sidebar + Topbar layout
+│   │   ├── page.js                      # Overview dashboard
+│   │   ├── interview/
+│   │   │   ├── start/page.js
+│   │   │   ├── all/page.js
+│   │   │   └── [id]/page.js
+│   │   ├── feedback/
+│   │   │   ├── all/page.js
+│   │   │   └── [interviewId]/page.js
+│   │   ├── subscription/page.js
+│   │   ├── analytics/page.js
+│   │   ├── profile/page.js
+│   │   ├── loading.js
+│   │   └── error.js
+│   │
+│   ├── (admin)/                         # Admin panel (role: admin)
+│   │   ├── layout.js
+│   │   ├── dashboard/page.js
+│   │   ├── users/page.js
+│   │   ├── interviews/page.js
+│   │   ├── plans/page.js
+│   │   ├── analytics/page.js
+│   │   ├── loading.js
+│   │   └── error.js
+│   │
+│   ├── providers.js                     # Redux, Theme, Toast providers
+│   ├── layout.js                        # Root layout
+│   ├── not-found.js                     # 404 page
+│   └── globals.css                      # Global Tailwind styles
+│
+├── components/                          # Reusable UI components (pure)
+│   ├── ui/                              # ShadCN base components (Button, Card)
+│   ├── common/                          # Navbar, Sidebar, Footer, etc.
+│   ├── dashboard/                       # Dashboard widgets, cards, etc.
+│   ├── admin/                           # Admin table, filters, etc.
+│   ├── forms/                           # Reusable form inputs, RHF controls
+│   ├── charts/                          # Recharts / Chart.js components
+│   └── loaders/                         # Spinners, Skeletons
+│
+├── features/                            # Domain-based modules (Redux + UI)
+│   ├── auth/
+│   │   ├── components/                  # LoginForm, RegisterForm
+│   │   ├── hooks/                       # useLogin, useLogout
+│   │   ├── services.js                  # Auth API calls
+│   │   ├── slice.js                     # Redux slice
+│   │   ├── api.js                       # RTK Query endpoints
+│   │   └── selectors.js                 # Memoized selectors
+│   ├── interview/
+│   │   ├── components/
+│   │   ├── hooks/
+│   │   ├── slice.js
+│   │   ├── api.js
+│   │   ├── adapters.js
+│   │   └── selectors.js
+│   ├── feedback/
+│   ├── subscription/
+│   ├── analytics/
+│   └── admin/
+│
+├── hooks/                               # Global custom React hooks
+│   ├── useAuth.js
+│   ├── useFetch.js
+│   ├── useDebounce.js
+│   └── useToast.js
+│
+├── redux/                               # Central Redux setup
+│   ├── store.js                         # configureStore + middleware setup
+│   ├── rootReducer.js                   # combineReducers
+│   ├── slices/                          # Global (non-feature) slices
+│   │   ├── appSlice.js                  # Theme, sidebar, modals, etc.
+│   │   └── toastSlice.js                # Global toasts
+│   └── persist.js                       # redux-persist setup (optional)
+│
+├── lib/                                 # Core configuration / utilities
+│   ├── axios.js                         # Axios instance (with interceptors)
+│   ├── rtk.js                           # RTK Query base setup
+│   ├── auth.js                          # JWT helpers (decode, check expiry)
+│   ├── constants.js                     # Roles, Routes, Limits
+│   ├── env.js                           # Safe environment variable helper
+│   ├── storage.js                       # LocalStorage/session utils
+│   ├── formatters.js                    # date/number/text formatters
+│   └── permissions.js                   # Role-based access control utils
+│
+├── guards/                              # Route protection components
+│   ├── AuthGuard.js                     # Protects logged-in routes
+│   └── AdminGuard.js                    # Protects admin-only routes
+│
+├── services/                            # Frontend-only integrations
+│   ├── voice/                           # Speech-to-text, tone analysis logic
+│   ├── payments/                        # Stripe/Razorpay frontend helpers
+│   └── analytics/                       # GA/Posthog tracking
+│
+├── utils/                               # Generic utility functions
+│   ├── validators.js                    # Zod/Yup validation schemas
+│   ├── errorHandler.js                  # Global error formatting
+│   ├── notify.js                        # Toast/alert helpers
+│   ├── debounce.js                      # Debounce/throttle helpers
+│   └── logger.js                        # Simple console logger
+│
+├── styles/                              # Tailwind and global styling
+│   ├── globals.css
+│   ├── variables.css
+│   └── animations.css
+│
+└── public/                              # Static assets (images, icons, etc.)
+    └── images/
