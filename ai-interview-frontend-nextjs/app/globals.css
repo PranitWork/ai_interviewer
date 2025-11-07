@@ -1,0 +1,40 @@
+@import "tailwindcss";
+
+
+/* === VoxyAI Global Theme === */
+@theme {
+  /* Backgrounds */
+  --color-voxy-bg: #0b0b10;
+  --color-voxy-surface: #12121a;
+
+  /* Text */
+  --color-voxy-text: #f1f1f2;
+  --color-voxy-muted: #a1a1aa;
+
+  /* Borders */
+  --color-voxy-border: #1f1f29;
+
+  /* Brand Palette */
+  --color-voxy-primary: #6366f1; /* indigo-500 */
+  --color-voxy-secondary: #8b5cf6; /* violet-500 */
+  --color-voxy-accent: #a855f7; /* purple-500 */
+  --color-voxy-highlight: #818cf8; /* soft accent */
+
+  /* Gradients */
+  --gradient-voxy: linear-gradient(90deg, var(--color-voxy-primary), var(--color-voxy-secondary));
+
+  /* Fonts */
+  --font-sans: "Inter", "Poppins", sans-serif;
+}
+
+@layer base {
+  html {
+    @apply bg-voxy-bg text-voxy-text font-sans;
+  }
+  a {
+    @apply text-voxy-primary hover:text-voxy-secondary transition;
+  }
+  button {
+    @apply font-medium;
+  }
+}
