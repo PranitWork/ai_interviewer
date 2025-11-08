@@ -6,13 +6,13 @@ import { Brain, Users, Sparkles } from "lucide-react";
 
 export default function About() {
   return (
-    <main className="min-h-screen bg-gradient-to-b from-voxy-bg via-voxy-surface to-voxy-bg text-voxy-text py-24 px-6">
+    <main className="min-h-screen bg-gradient-to-b from-voxy-bg via-voxy-surface to-voxy-bg text-voxy-text py-0 px-6">
       <Header/>
       {/* Heading */}
       <motion.h1
         initial={{ opacity: 0, y: 20 }}
         animate={{ opacity: 1, y: 0 }}
-        className="text-4xl md:text-6xl font-bold text-center mb-8"
+        className="text-4xl md:text-6xl font-bold text-center pt-25 mb-8"
       >
         About <span className="text-voxy-primary">Voxy AI</span>
       </motion.h1>

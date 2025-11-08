@@ -4,16 +4,33 @@ import { motion } from "framer-motion";
 import Link from "next/link";
 import { useState } from "react";
 import { Lock } from "lucide-react";
+import { useForm } from "react-hook-form";
+import { useDispatch } from "react-redux";
+import { AppDispatch } from "@/app/Store/Store";
+import { asyncResetPassword } from "@/app/Store/actions/authActions";
+import { toast } from "react-toastify";
+import { useParams, useRouter } from "next/navigation";
 
 export default function ResetPasswordPage() {
-  const [password, setPassword] = useState("");
+  const {id}= useParams();
+  const dispatch = useDispatch<AppDispatch>();
+  const {register, handleSubmit, formState:{errors}} = useForm();
+  const router = useRouter();
+  if (!id) {
+    toast.error("Missing reset token!");
+    return;
+  }
+  const resetPassword = async (data:any)=>{
+    const res = await dispatch(asyncResetPassword(id as string, data));
+    if(res.success){
+      toast.success(res.message || "Password reset successful!");
+      router.push("/auth/login");
+    }else{
+      toast.error(`Password reset failed: ${res.message}`);
+    }
+  }
 
-  const handleSubmit = (e: React.FormEvent) => {
-    e.preventDefault();
-    console.log("New password:", password);
-    // 🔹 Later, integrate with your backend API here
-    // Example: await axios.post("/api/auth/reset-password", { password });
-  };
+
 
   return (
     <main className="min-h-screen flex items-center justify-center bg-gradient-to-b from-voxy-surface via-black to-voxy-surface text-white px-4">
@@ -34,7 +51,7 @@ export default function ResetPasswordPage() {
         </div>
 
         {/* Form */}
-        <form onSubmit={handleSubmit} className="space-y-6">
+        <form onSubmit={handleSubmit(resetPassword)} className="space-y-6">
           <div>
             <label htmlFor="password" className="block text-sm font-medium mb-2">
               New Password
@@ -45,9 +62,15 @@ export default function ResetPasswordPage() {
                 type="password"
                 id="password"
                 required
-                minLength={6}
-                value={password}
-                onChange={(e) => setPassword(e.target.value)}
+                minLength={8}
+                
+                  {...register("password", {
+                    required: "Password is required",
+                    minLength: {
+                      value: 8,
+                      message: "Password must be at least 8 characters",
+                    },
+                  })}
                 placeholder="Enter new password"
                 className="w-full pl-10 pr-4 py-2.5 rounded-lg bg-transparent border border-voxy-border text-white placeholder-voxy-muted focus:ring-2 focus:ring-voxy-primary focus:outline-none"
               />

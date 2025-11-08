@@ -4,13 +4,16 @@ import {
   loginUser,
   forgotPassword,
   resetPassword,
-  logoutUser
+  logoutUser,
+  currentUser
 } from "../controllers/authController.js";
 import { googleLogin } from "../utils/googleAuth.js";
+import { protect } from "../middleware/authMiddleware.js";
 
 
 const router = express.Router();
 
+router.get("/current-user",protect,currentUser);
 router.post("/register", registerUser);
 router.post("/login", loginUser);
 router.post("/forgot-password", forgotPassword);

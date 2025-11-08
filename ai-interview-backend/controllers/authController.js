@@ -84,7 +84,7 @@ export const forgotPassword = async (req, res) => {
     const resetToken = user.getResetPasswordToken();
      await user.save({ validateBeforeSave: false });
 
-    const resetUrl = `${process.env.CLIENT_URL}/api/auth/reset-password/${resetToken}`;
+    const resetUrl = `${process.env.CLIENT_URL}/auth/reset-password/${resetToken}`;
     console.log(resetUrl)
     const message = `
       <h2>Reset Your Password</h2>
@@ -140,3 +140,10 @@ export const logoutUser = (req, res) => {
   res.clearCookie("token");
   res.json({ success: true, message: "Logged out" });
 };
+
+export const currentUser=(req,res)=>{
+   res.status(200).json({
+    success: true,
+    user: req.user,
+  });
+}

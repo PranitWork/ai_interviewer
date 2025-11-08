@@ -1,9 +1,14 @@
 import { configureStore } from "@reduxjs/toolkit";
 import authSlice from "@/app/Store/reducers/authSlice";
+import  interviewSlice  from "./reducers/interviewSlice";
+import  feedbackSlice  from "./reducers/feedbackSlice";
+
 
 export const store = configureStore({
   reducer: {
     authReducer: authSlice,
+    interviewReducer: interviewSlice,
+    feedbackReducer: feedbackSlice
   },
 });
 

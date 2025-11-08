@@ -4,6 +4,9 @@ import { useState } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import { LogOut, User, Mail, Clock, Shield, CheckCircle2, X } from "lucide-react";
 import { useRouter } from "next/navigation";
+import { useDispatch } from "react-redux";
+import { AppDispatch } from "@/app/Store/Store";
+import { asyncLogoutUser } from "@/app/Store/actions/authActions";
 
 export default function LogoutSection() {
   const [showConfirm, setShowConfirm] = useState(false);
@@ -17,16 +20,20 @@ export default function LogoutSection() {
     plan: "Pro",
   };
 
+  const dispatch = useDispatch<AppDispatch>();
   const handleLogout = async () => {
+    dispatch(asyncLogoutUser());
     setIsLoggingOut(true);
-
-    // Simulate logout delay (API call)
     setTimeout(() => {
       setIsLoggingOut(false);
       setShowConfirm(false);
-      router.push("/login"); // redirect to login
+      router.push("/auth/login"); // redirect to login
     }, 1500);
   };
+
+   
+    
+ 
 
   return (
     <motion.div

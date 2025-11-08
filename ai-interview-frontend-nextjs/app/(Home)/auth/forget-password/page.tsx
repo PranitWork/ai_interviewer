@@ -4,15 +4,30 @@ import { motion } from "framer-motion";
 import Link from "next/link";
 import { useState } from "react";
 import { Mail } from "lucide-react";
+import { useForm } from "react-hook-form";
+import { useDispatch } from "react-redux";
+import { AppDispatch } from "@/app/Store/Store";
+import { asyncForgotPassword } from "@/app/Store/actions/authActions";
+import { toast } from "react-toastify";
+import { useRouter } from "next/navigation";
 
 export default function ForgotPasswordPage() {
-  const [email, setEmail] = useState("");
 
-  const handleSubmit = (e: React.FormEvent) => {
-    e.preventDefault();
-    console.log("Reset link sent to:", email);
-    // 🔹 You’ll integrate your backend API here later
-  };
+  
+  const {register, handleSubmit,formState:{errors}}=useForm();
+  
+  const dispatch = useDispatch<AppDispatch>();
+  const router = useRouter();
+
+  const forgetEmail = async (data:any)=>{
+    const res = await dispatch(asyncForgotPassword(data.email));
+    if(res.success){
+      toast.success(res.message);
+      router.push(`${res.resetUrl}`)
+    }else{
+      toast.error(res.message);
+    }
+  }
 
   return (
     <main className="min-h-screen flex items-center justify-center bg-gradient-to-b from-voxy-surface via-black to-voxy-surface text-white px-4">
@@ -33,7 +48,7 @@ export default function ForgotPasswordPage() {
         </div>
 
         {/* Form */}
-        <form onSubmit={handleSubmit} className="space-y-6">
+        <form onSubmit={handleSubmit(forgetEmail)} className="space-y-6">
           <div>
             <label htmlFor="email" className="block text-sm font-medium mb-2">
               Email Address
@@ -44,8 +59,7 @@ export default function ForgotPasswordPage() {
                 type="email"
                 id="email"
                 required
-                value={email}
-                onChange={(e) => setEmail(e.target.value)}
+                {...register("email",{required:"Email is required"})}
                 placeholder="Enter your email"
                 className="w-full pl-10 pr-4 py-2.5 rounded-lg bg-transparent border border-voxy-border text-white placeholder-voxy-muted focus:ring-2 focus:ring-voxy-primary focus:outline-none"
               />

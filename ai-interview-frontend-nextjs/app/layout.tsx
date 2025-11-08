@@ -1,8 +1,10 @@
 import type { Metadata } from "next";
 import { Geist, Geist_Mono } from "next/font/google";
 import "./globals.css";
-import StoreProvider from "./providers/StoreProvider"
-
+import StoreProvider from "./providers/StoreProvider";
+import { GoogleOAuthProvider } from "@react-oauth/google";
+import AppInitializer from "./components/AppInitializer";
+import { ToastContainer } from "react-toastify";
 
 const geistSans = Geist({
   variable: "--font-geist-sans",
@@ -27,9 +29,20 @@ export default function RootLayout({
   return (
     <html lang="en">
       <body>
-
-        <StoreProvider>{children}</StoreProvider>
- 
+        <StoreProvider>
+          <GoogleOAuthProvider
+            clientId={process.env.NEXT_PUBLIC_GOOGLE_CLIENT_ID!}
+          >
+            <ToastContainer
+              position="top-right"
+              autoClose={3000}
+              theme="colored"
+            />
+            
+            <AppInitializer />
+            {children}
+          </GoogleOAuthProvider>
+        </StoreProvider>
       </body>
     </html>
   );
