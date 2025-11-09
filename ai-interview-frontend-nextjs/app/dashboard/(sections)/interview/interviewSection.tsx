@@ -200,10 +200,24 @@ export default function InterviewSection() {
     await evaluateAndShow(finalTextRef.current || finalText);
   };
 
-  const handleSkipQuestion = async () => {
-    if (isListeningRef.current) stopRecognition();
-    await evaluateAndShow("", true);
-  };
+ const handleSkipQuestion = async () => {
+  if (isListeningRef.current) stopRecognition();
+
+  // Just skip the question directly — no evaluation
+  const nextIndex = questionIndex + 1;
+  if (nextIndex < (interviewData?.questions?.length ?? 0)) {
+    setQuestionIndex(nextIndex);
+    const draft = draftAnswersRef.current[nextIndex] || "";
+    finalTextRef.current = draft;
+    setFinalText(draft);
+    setInterimText("");
+    setQuestionFeedback(null);
+    speakQuestion(interviewData.questions[nextIndex].question);
+  } else {
+    setShowPopup(true);
+  }
+};
+
 
   const handleRepeatQuestion = () => {
     const q = interviewData?.questions?.[questionIndex]?.question;
