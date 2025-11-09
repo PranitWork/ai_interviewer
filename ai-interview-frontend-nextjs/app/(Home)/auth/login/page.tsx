@@ -69,7 +69,7 @@ export default function Login() {
             transition={{ duration: 0.6 }}
             className="text-3xl font-bold text-center mb-2"
           >
-            Welcome Back to <span className="text-voxy-primary">Voxy AI</span>
+            Welcome Back to <span className="text-voxy-primary">Swar AI</span>
           </motion.h1>
           <p className="text-center text-voxy-muted mb-8">
             Log in to access your AI interview dashboard and insights.

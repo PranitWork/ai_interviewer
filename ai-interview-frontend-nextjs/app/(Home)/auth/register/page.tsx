@@ -68,7 +68,7 @@ export default function Register() {
             transition={{ duration: 0.6 }}
             className="text-3xl font-bold text-center mb-2"
           >
-            Create Your <span className="text-voxy-primary">Voxy AI</span> Account
+            Create Your <span className="text-voxy-primary">Swar AI</span> Account
           </motion.h1>
           <p className="text-center text-voxy-muted mb-8">
             Join and start experiencing the power of AI-driven interviews.

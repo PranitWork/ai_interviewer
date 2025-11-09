@@ -1,6 +1,6 @@
 import { AppDispatch } from "../Store";
 import axios from "../../api/config";
-import { setFeedback } from "../reducers/feedbackSlice";
+import { setAllFeedbacks, setFeedback } from "../reducers/feedbackSlice";
 
 // ✅ Handles multiple backend response shapes
 export const generateFeedback = (id: any) => async (dispatch: AppDispatch) => {
@@ -39,3 +39,25 @@ export const generateFeedback = (id: any) => async (dispatch: AppDispatch) => {
     return { success: false, error: message };
   }
 };
+
+export const asyncGetAllFeedbacks =()=>async(dispatch:AppDispatch)=>{
+  try{
+    const response = await axios.get("/feedback/all",{
+      withCredentials:true,
+    })
+    if(response.data){
+      dispatch(setAllFeedbacks(response.data));
+      return {success:true,data:response.data};
+    }else{
+      return {success:false,error:"No feedbacks found"};
+    }
+  }catch(err:any){
+
+    const message =
+      err.response?.data?.message ||
+      err.response?.data?.error ||
+      err.message ||
+      "Something went wrong";
+    return { success: false, error: message };
+  }
+}

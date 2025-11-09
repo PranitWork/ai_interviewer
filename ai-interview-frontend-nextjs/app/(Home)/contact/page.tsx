@@ -24,7 +24,7 @@ export default function Contact() {
         transition={{ delay: 0.2 }}
         className="max-w-2xl mx-auto text-center text-voxy-muted text-lg"
       >
-        Have questions about Voxy AI? We're here to help. Reach out anytime.
+        Have questions about Swar AI? We're here to help. Reach out anytime.
       </motion.p>
 
       {/* Form + Info */}
@@ -65,7 +65,7 @@ export default function Contact() {
           className="space-y-8"
         >
           {[
-            { icon: <Mail />, text: "support@voxyai.com" },
+            { icon: <Mail />, text: "support@SwarAI.com" },
             { icon: <Phone />, text: "+1 (555) 123-4567" },
             { icon: <MapPin />, text: "New Sangvi Krishna Chowk, Pune" },
           ].map((item, i) => (

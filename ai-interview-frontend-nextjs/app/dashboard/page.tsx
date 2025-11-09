@@ -13,7 +13,7 @@ import {
   Menu,
   X,
 } from "lucide-react";
-import { useState } from "react";
+import { useMemo, useState } from "react";
 import clsx from "clsx";
 import AnalyticsSection from "./(sections)/analytics/analyticsSection"; // ✅ import section
 import InterviewSection from "./(sections)/interview/interviewSection";
@@ -41,7 +41,8 @@ export default function Dashboard() {
   const [isOpen, setIsOpen] = useState(false);
 
   const activeItem = navItems.find((item) => item.name === active);
-
+  const randomSeed = useMemo(() => Math.random().toString(36).substring(2, 9), []);
+  const avatarUrl = `https://api.dicebear.com/9.x/adventurer/png?seed=${randomSeed}`;
   return (
     <div className="h-screen w-screen flex bg-gradient-to-br from-black via-voxy-surface to-black text-white overflow-hidden">
       {/* ===== SIDEBAR ===== */}
@@ -54,7 +55,7 @@ export default function Dashboard() {
         {/* Logo */}
         <div className="text-center py-8 border-b border-voxy-border">
           <h1 className="text-2xl font-extrabold tracking-tight">
-            Voxy<span className="text-voxy-primary">AI</span>
+            Swar<span className="text-voxy-primary">AI</span>
           </h1>
           <p className="text-xs text-voxy-muted mt-1">Intelligent Insights</p>
         </div>
@@ -85,7 +86,7 @@ export default function Dashboard() {
 
         {/* Footer */}
         <div className="text-center py-5 border-t border-voxy-border text-xs text-voxy-muted">
-          © 2025 VoxyAI
+          © 2025 SwarAI. All rights reserved.
         </div>
       </aside>
 
@@ -116,7 +117,7 @@ export default function Dashboard() {
             className="flex items-center gap-3 bg-voxy-surface/60 border border-voxy-border px-4 py-2 rounded-full shadow-inner cursor-pointer hover:bg-voxy-border/40 transition"
           >
             <img
-              src="https://i.pravatar.cc/40"
+              src={avatarUrl}
               alt="User"
               className="w-8 h-8 rounded-full border border-voxy-primary"
             />

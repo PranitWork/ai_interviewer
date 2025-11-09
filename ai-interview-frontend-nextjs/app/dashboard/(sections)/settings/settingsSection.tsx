@@ -59,7 +59,7 @@ export default function SettingsSection() {
           <h3 className="text-lg font-semibold">Microphone Access</h3>
         </div>
         <p className="text-sm text-voxy-muted leading-relaxed">
-          Allow VoxyAI to access your microphone for conducting AI voice
+          Allow SwarAI to access your microphone for conducting AI voice
           interviews and real-time responses.
         </p>
 

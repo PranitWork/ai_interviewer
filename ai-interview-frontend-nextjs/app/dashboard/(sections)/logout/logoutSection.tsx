@@ -111,7 +111,7 @@ export default function LogoutSection() {
               <LogOut className="text-red-400 mx-auto mb-3" size={40} />
               <h3 className="text-2xl font-bold mb-2">Confirm Logout</h3>
               <p className="text-voxy-muted mb-6 text-sm">
-                Are you sure you want to log out from your VoxyAI account?
+                Are you sure you want to log out from your SwarAI account?
               </p>
 
               <div className="flex justify-center gap-4">

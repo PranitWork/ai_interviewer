@@ -43,7 +43,7 @@ export default function ResetPasswordPage() {
         {/* Logo / Title */}
         <div className="text-center mb-8">
           <Link href="/" className="text-3xl font-bold">
-            Voxy<span className="text-voxy-primary">AI</span>
+            Swar<span className="text-voxy-primary">AI</span>
           </Link>
           <p className="text-voxy-muted mt-2 text-sm">
             Enter your new password to secure your account.

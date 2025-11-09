@@ -7,6 +7,7 @@ interface ReportType {
   strengths: string[];
   weaknesses: string[];
   summary: string;
+  GetAllFeedbacks:[];
 }
 
 interface FeedbackType {
@@ -16,14 +17,17 @@ interface FeedbackType {
   report?: ReportType;
   createdAt?: string;
   updatedAt?: string;
+  GetAllFeedbacks?:[];
 }
 
 interface FeedbackState {
   feedback: FeedbackType | null;
+  allFeedbacks: FeedbackType[]; 
 }
 
 const initialState: FeedbackState = {
   feedback: null,
+  allFeedbacks: [],
 };
 
 const feedbackSlice = createSlice({
@@ -35,8 +39,12 @@ const feedbackSlice = createSlice({
       const fb = action.payload.feedback || action.payload;
       state.feedback = fb;
     },
+
+    setAllFeedbacks: (state, action: PayloadAction<FeedbackType[]>) => {
+      state.allFeedbacks = action.payload;
+    },
   },
 });
 
-export const { setFeedback } = feedbackSlice.actions;
+export const { setFeedback,setAllFeedbacks } = feedbackSlice.actions;
 export default feedbackSlice.reducer;
