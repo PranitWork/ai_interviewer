@@ -16,11 +16,11 @@ function cleanAIResponse(str) {
 
 // 🚀 Start Interview
 export const startInterview = async (req, res) => {
-  const { role } = req.body;
+  const { role, details } = req.body;
 
   try {
     const prompt = `
-You are an interviewer for the role of ${role}.
+You are an interviewer for the role of ${role}. also Job Description ${details}
 Generate exactly 5 technical and 2 behavioral questions.
 Return ONLY a pure JSON array in this format:
 [

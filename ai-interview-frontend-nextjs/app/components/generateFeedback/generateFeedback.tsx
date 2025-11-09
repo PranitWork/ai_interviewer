@@ -122,40 +122,39 @@ export default function FeedbackReportModal({
             )}
           </div>
 
-        {/* ===== STRENGTHS / IMPROVEMENTS ===== */}
-{(feedbackData?.strengths?.length ?? 0) > 0 ||
-(feedbackData?.improvements?.length ?? 0) > 0 ? (
-  <div className="mt-8 grid sm:grid-cols-2 gap-6">
-    {Array.isArray(feedbackData?.strengths) &&
-      feedbackData.strengths.length > 0 && (
-        <div className="p-4 rounded-xl border border-voxy-border bg-voxy-surface/60">
-          <h4 className="font-semibold text-voxy-primary mb-2 flex items-center gap-2">
-            <Target size={18} /> Strengths
-          </h4>
-          <ul className="text-sm text-voxy-muted list-disc list-inside space-y-1">
-            {feedbackData.strengths.map((s: string, i: number) => (
-              <li key={i}>{s}</li>
-            ))}
-          </ul>
-        </div>
-      )}
+          {/* ===== STRENGTHS / IMPROVEMENTS ===== */}
+          {(feedbackData?.strengths?.length ?? 0) > 0 ||
+          (feedbackData?.improvements?.length ?? 0) > 0 ? (
+            <div className="mt-8 grid sm:grid-cols-2 gap-6">
+              {Array.isArray(feedbackData?.strengths) &&
+                feedbackData.strengths.length > 0 && (
+                  <div className="p-4 rounded-xl border border-voxy-border bg-voxy-surface/60">
+                    <h4 className="font-semibold text-voxy-primary mb-2 flex items-center gap-2">
+                      <Target size={18} /> Strengths
+                    </h4>
+                    <ul className="text-sm text-voxy-muted list-disc list-inside space-y-1">
+                      {feedbackData.strengths.map((s: string, i: number) => (
+                        <li key={i}>{s}</li>
+                      ))}
+                    </ul>
+                  </div>
+                )}
 
-    {Array.isArray(feedbackData?.improvements) &&
-      feedbackData.improvements.length > 0 && (
-        <div className="p-4 rounded-xl border border-voxy-border bg-voxy-surface/60">
-          <h4 className="font-semibold text-red-400 mb-2 flex items-center gap-2">
-            <Target size={18} /> Improvements
-          </h4>
-          <ul className="text-sm text-voxy-muted list-disc list-inside space-y-1">
-            {feedbackData.improvements.map((s: string, i: number) => (
-              <li key={i}>{s}</li>
-            ))}
-          </ul>
-        </div>
-      )}
-  </div>
-) : null}
-
+              {Array.isArray(feedbackData?.improvements) &&
+                feedbackData.improvements.length > 0 && (
+                  <div className="p-4 rounded-xl border border-voxy-border bg-voxy-surface/60">
+                    <h4 className="font-semibold text-red-400 mb-2 flex items-center gap-2">
+                      <Target size={18} /> Improvements
+                    </h4>
+                    <ul className="text-sm text-voxy-muted list-disc list-inside space-y-1">
+                      {feedbackData.improvements.map((s: string, i: number) => (
+                        <li key={i}>{s}</li>
+                      ))}
+                    </ul>
+                  </div>
+                )}
+            </div>
+          ) : null}
 
           {/* ===== ACTIONS ===== */}
           <div className="mt-8 flex flex-col sm:flex-row justify-center gap-4">

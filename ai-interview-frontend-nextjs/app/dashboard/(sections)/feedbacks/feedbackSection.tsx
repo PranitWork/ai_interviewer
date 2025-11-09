@@ -1,26 +1,29 @@
 "use client";
 
+import { useSelector } from "react-redux";
+import { RootState } from "@/app/Store/Store";
 import { motion } from "framer-motion";
-import { Gauge, MessageSquare, SmilePlus, ThumbsUp, ThumbsDown, Sparkles } from "lucide-react";
+import {
+  Gauge,
+  MessageSquare,
+  SmilePlus,
+  ThumbsUp,
+  ThumbsDown,
+  Sparkles,
+} from "lucide-react";
 
 export default function FeedbackSection() {
-  // 🧩 Mock feedback data (replace with backend data later)
-  const feedback = {
-    technicalScore: 8,
-    communication: "Excellent clarity and structured answers.",
-    confidence: "Good overall confidence; consistent tone.",
-    strengths: [
-      "Strong understanding of React and state management.",
-      "Well-structured problem-solving approach.",
-      "Good command over communication and explanation.",
-    ],
-    weaknesses: [
-      "Needs improvement in backend optimization concepts.",
-      "Could elaborate more on database scaling techniques.",
-    ],
-    summary:
-      "Overall, you performed strongly in the interview. Your answers were clear and well-organized, demonstrating good technical expertise and communication. A bit more focus on advanced backend optimization and architectural decisions could improve your performance even further.",
-  };
+  const feedback = useSelector(
+    (state: RootState) => state.feedbackReducer.feedback?.report
+  );
+
+  if (!feedback) {
+    return (
+      <div className="text-center text-voxy-muted mt-20">
+        <p>No feedback report available. Please complete your interview first.</p>
+      </div>
+    );
+  }
 
   return (
     <motion.div
@@ -29,15 +32,15 @@ export default function FeedbackSection() {
       transition={{ duration: 0.5, ease: "easeOut" }}
       className="space-y-10"
     >
-      {/* ===== HEADER ===== */}
+      {/* HEADER */}
       <div className="text-center">
         <h2 className="text-3xl font-bold mb-2">AI Interview Feedback</h2>
         <p className="text-voxy-muted text-sm">
-          Here’s your personalized feedback from the AI interviewer based on your performance.
+          Here’s your personalized feedback from the AI interviewer.
         </p>
       </div>
 
-      {/* ===== TECHNICAL SCORE ===== */}
+      {/* TECHNICAL SCORE */}
       <motion.div
         whileHover={{ scale: 1.02 }}
         className="max-w-md mx-auto bg-voxy-surface/80 border border-voxy-border rounded-2xl p-6 backdrop-blur-lg shadow-lg text-center"
@@ -63,7 +66,7 @@ export default function FeedbackSection() {
               initial={{ strokeDasharray: 0, strokeDashoffset: 440 }}
               animate={{
                 strokeDasharray: 440,
-                strokeDashoffset: 440 - (440 * feedback.technicalScore) / 10,
+                strokeDashoffset: 440 - (440 * (feedback.technicalScore || 0)) / 10,
               }}
               transition={{ duration: 1.5, ease: "easeOut" }}
             />
@@ -77,13 +80,15 @@ export default function FeedbackSection() {
 
           <div className="absolute inset-0 flex flex-col items-center justify-center">
             <Gauge size={28} className="text-voxy-primary mb-1" />
-            <p className="text-3xl font-bold">{feedback.technicalScore}/10</p>
+            <p className="text-3xl font-bold">
+              {feedback.technicalScore ?? 0}/10
+            </p>
             <span className="text-xs text-voxy-muted">Technical Score</span>
           </div>
         </div>
       </motion.div>
 
-      {/* ===== COMMUNICATION & CONFIDENCE ===== */}
+      {/* COMMUNICATION & CONFIDENCE */}
       <div className="grid grid-cols-1 sm:grid-cols-2 gap-6">
         <motion.div
           whileHover={{ scale: 1.02 }}
@@ -94,7 +99,7 @@ export default function FeedbackSection() {
             <h3 className="text-lg font-semibold">Communication</h3>
           </div>
           <p className="text-sm text-voxy-muted leading-relaxed">
-            {feedback.communication}
+            {feedback.communication || "No data available."}
           </p>
         </motion.div>
 
@@ -107,12 +112,12 @@ export default function FeedbackSection() {
             <h3 className="text-lg font-semibold">Confidence</h3>
           </div>
           <p className="text-sm text-voxy-muted leading-relaxed">
-            {feedback.confidence}
+            {feedback.confidence || "No data available."}
           </p>
         </motion.div>
       </div>
 
-      {/* ===== STRENGTHS & WEAKNESSES ===== */}
+      {/* STRENGTHS & WEAKNESSES */}
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
         {/* Strengths */}
         <motion.div
@@ -123,13 +128,20 @@ export default function FeedbackSection() {
             <ThumbsUp className="text-green-400" size={20} />
             <h3 className="text-lg font-semibold">Strengths</h3>
           </div>
-          <ul className="space-y-2 text-sm text-voxy-muted">
-            {feedback.strengths.map((point, i) => (
-              <li key={i} className="flex items-start gap-2">
-                <span className="text-voxy-primary mt-0.5">•</span> {point}
-              </li>
-            ))}
-          </ul>
+
+          {feedback.strengths?.length ? (
+            <ul className="space-y-2 text-sm text-voxy-muted">
+              {feedback.strengths.map((point, i) => (
+                <li key={i} className="flex items-start gap-2">
+                  <span className="text-voxy-primary mt-0.5">•</span> {point}
+                </li>
+              ))}
+            </ul>
+          ) : (
+            <p className="text-sm text-voxy-muted italic">
+              No strengths recorded.
+            </p>
+          )}
         </motion.div>
 
         {/* Weaknesses */}
@@ -141,17 +153,24 @@ export default function FeedbackSection() {
             <ThumbsDown className="text-red-400" size={20} />
             <h3 className="text-lg font-semibold">Weaknesses</h3>
           </div>
-          <ul className="space-y-2 text-sm text-voxy-muted">
-            {feedback.weaknesses.map((point, i) => (
-              <li key={i} className="flex items-start gap-2">
-                <span className="text-red-400 mt-0.5">•</span> {point}
-              </li>
-            ))}
-          </ul>
+
+          {feedback.weaknesses?.length ? (
+            <ul className="space-y-2 text-sm text-voxy-muted">
+              {feedback.weaknesses.map((point, i) => (
+                <li key={i} className="flex items-start gap-2">
+                  <span className="text-red-400 mt-0.5">•</span> {point}
+                </li>
+              ))}
+            </ul>
+          ) : (
+            <p className="text-sm text-voxy-muted italic">
+              No weaknesses recorded.
+            </p>
+          )}
         </motion.div>
       </div>
 
-      {/* ===== SUMMARY ===== */}
+      {/* SUMMARY */}
       <motion.div
         whileHover={{ scale: 1.01 }}
         className="p-6 rounded-2xl border border-voxy-border bg-voxy-surface/70 backdrop-blur-lg shadow-lg"
@@ -161,7 +180,7 @@ export default function FeedbackSection() {
           <h3 className="text-lg font-semibold">Summary</h3>
         </div>
         <p className="text-sm text-voxy-muted leading-relaxed">
-          {feedback.summary}
+          {feedback.summary || "No summary available."}
         </p>
       </motion.div>
     </motion.div>

@@ -3,9 +3,9 @@ import axios from "../../api/config";
 import { setInterview, setEvaluate } from "../reducers/interviewSlice";
 
 // ✅ Start Interview — backend returns full interview object
-export const asyncStartInterview =(role: any) => async (dispatch: AppDispatch) => {
+export const asyncStartInterview =(data: any) => async (dispatch: AppDispatch) => {
     try {
-      const res = await axios.post("/interview/start", role, {
+      const res = await axios.post("/interview/start", data, {
         withCredentials: true,
       });
 
