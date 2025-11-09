@@ -23,6 +23,7 @@ import {
 } from "@/app/Store/actions/interviewActions";
 import { generateFeedback } from "@/app/Store/actions/feedbackAction";
 import FeedbackSection from "../feedbacks/feedbackSection";
+import { toast } from "react-toastify";
 
 export default function InterviewSection() {
   const dispatch = useDispatch<any>();
@@ -129,7 +130,7 @@ export default function InterviewSection() {
 
   const startRecognition = useCallback(() => {
     if (!setupRecognitionIfNeeded()) {
-      alert("Speech recognition not supported in this browser.");
+      toast.error("Speech recognition not supported in this browser.");
       return;
     }
     if (isListeningRef.current) return;
@@ -236,11 +237,11 @@ export default function InterviewSection() {
         setTimeout(() => speakQuestion(data.questions[0].question), 400);
       } else {
         console.error("Start interview failed:", error);
-        alert("Failed to start interview. Try again.");
+        toast.error("Failed to start interview. Try again.");
       }
     } catch (e) {
       console.error(e);
-      alert("Unexpected error while starting interview.");
+      toast.error("Unexpected error while starting interview.");
     } finally {
       setLoading(false);
     }
@@ -289,11 +290,11 @@ export default function InterviewSection() {
       } else {
         console.error("Generate report failed:", res);
         const msg = res?.error || (res?.data?.message ?? "Failed to generate report. Try again.");
-        alert(msg);
+        toast.error(msg);
       }
     } catch (e) {
       console.error(e);
-      alert("Error generating report. Check console for details.");
+      toast.error("Error generating report. Check console for details.");
     } finally {
       setLoading(false);
     }

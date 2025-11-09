@@ -1,47 +1,57 @@
 "use client";
 
-import { useState, useMemo, useEffect } from "react";
+import { useState, useMemo, useEffect, ChangeEvent } from "react";
 import { motion } from "framer-motion";
-import { User, Mail, Briefcase, Pencil, Save, X } from "lucide-react";
+import { User, Mail, Pencil, Save, X } from "lucide-react";
 import { useDispatch, useSelector } from "react-redux";
-import { asyncgetUser } from "@/app/Store/actions/userActions"; 
-import { AppDispatch } from "@/app/Store/Store"; 
+import { AppDispatch, RootState } from "@/app/Store/Store";
+import { asyncgetUser, asyncUpdateUser } from "@/app/Store/actions/userActions";
+import { toast } from "react-toastify";
 
 export default function ProfileSection() {
-  const [editMode, setEditMode] = useState(false);
-  const dispatch = useDispatch<AppDispatch>(); 
-  const [profile, setProfile] = useState({
+  const dispatch = useDispatch<AppDispatch>();
+  const userProfile = useSelector((state: any) => state.userReducer.userProfile);
 
-    role: "MERN Full Stack Developer",
-   
-  });
+  const [editMode, setEditMode] = useState(false);
+  const [name, setName] = useState("");
 
   const randomSeed = useMemo(() => Math.random().toString(36).substring(2, 10), []);
   const avatarUrl = `https://api.dicebear.com/9.x/adventurer/png?seed=${randomSeed}`;
 
-  const userProfile = useSelector((state: any) => state.userReducer.userProfile);
-  console.log("user details",userProfile);
-
+  // Fetch user data
   useEffect(() => {
-    if (!userProfile) dispatch(asyncgetUser()); // ✅ Prevent unnecessary re-fetch
-  }, [dispatch, userProfile]);
+    dispatch(asyncgetUser());
+  }, [dispatch]);
 
-  const handleChange = (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>) => {
-    const { name, value } = e.target;
-    setProfile((prev) => ({ ...prev, [name]: value }));
+  // Sync Redux data to local state
+  useEffect(() => {
+    if (userProfile) {
+      setName(userProfile?.name || "");
+    }
+  }, [userProfile]);
+
+  // Handle name change
+  const handleChange = (e: ChangeEvent<HTMLInputElement>) => {
+    setName(e.target.value);
   };
 
-  const handleSave = () => {
+  // Save only name
+  const handleSave = async () => {
+    const result = await dispatch(asyncUpdateUser({ name }) as any);
+    console.log(result)
+   if (result?.success) {
+    toast.success(result.message || "✅ Name updated successfully!");
     setEditMode(false);
-    // TODO: connect with backend API (PUT /api/user/profile)
-    console.log("Profile updated:", profile);
+  } else {
+    toast.error(result.message || "❌ Failed to update name");
+  }
   };
 
   return (
     <motion.div
       initial={{ opacity: 0, y: 15 }}
       animate={{ opacity: 1, y: 0 }}
-      transition={{ duration: 0.5, ease: "easeOut" }}
+      transition={{ duration: 0.5 }}
       className="space-y-10 max-w-3xl mx-auto"
     >
       {/* ===== HEADER ===== */}
@@ -60,7 +70,7 @@ export default function ProfileSection() {
             onClick={() => setEditMode(true)}
             className="px-5 py-2.5 rounded-lg font-semibold text-white bg-gradient-to-r from-voxy-primary to-voxy-secondary shadow-md hover:opacity-90 transition flex items-center gap-2"
           >
-            <Pencil size={16} /> Edit Details
+            <Pencil size={16} /> Edit Name
           </motion.button>
         ) : (
           <div className="flex gap-3">
@@ -70,7 +80,7 @@ export default function ProfileSection() {
               onClick={handleSave}
               className="px-5 py-2.5 rounded-lg font-semibold text-white bg-gradient-to-r from-voxy-primary to-voxy-secondary shadow-md hover:opacity-90 transition flex items-center gap-2"
             >
-              <Save size={16} /> Save Changes
+              <Save size={16} /> Save
             </motion.button>
             <motion.button
               whileHover={{ scale: 1.05 }}
@@ -89,25 +99,21 @@ export default function ProfileSection() {
         whileHover={{ scale: 1.01 }}
         className="p-8 rounded-2xl border border-voxy-border bg-voxy-surface/70 backdrop-blur-lg shadow-lg space-y-8"
       >
-        {/* Profile Picture */}
+        {/* Avatar + Header */}
         <div className="flex flex-col sm:flex-row items-center gap-6">
           <div className="relative w-28 h-28 rounded-full border-2 border-voxy-primary shadow-md overflow-hidden">
-            <img
-              src={avatarUrl}
-              alt="Profile Avatar"
-              className="w-full h-full object-cover"
-            />
+            <img src={avatarUrl} alt="Profile Avatar" className="w-full h-full object-cover" />
           </div>
 
           <div className="text-center sm:text-left">
-            <h3 className="text-2xl font-semibold">{userProfile.name}</h3>
-            <p className="text-voxy-muted">{profile.role}</p>
+            <h3 className="text-2xl font-semibold">{name}</h3>
+            <p className="text-voxy-muted">{userProfile.email}</p>
           </div>
         </div>
 
-        {/* Profile Details */}
+        {/* Details */}
         <div className="grid grid-cols-1 sm:grid-cols-2 gap-6 mt-8">
-          {/* Name */}
+          {/* Full Name */}
           <div>
             <label className="text-sm text-voxy-muted mb-2 block flex items-center gap-1">
               <User size={14} /> Full Name
@@ -116,49 +122,27 @@ export default function ProfileSection() {
               <input
                 type="text"
                 name="name"
-                value={userProfile.name}
+                value={name}
                 onChange={handleChange}
                 className="w-full px-3 py-2 rounded-lg bg-voxy-surface border border-voxy-border text-white focus:ring-2 focus:ring-voxy-primary/70 focus:outline-none"
               />
             ) : (
-              <p className="text-white">{userProfile.name}</p>
+              <p className="text-white">{name}</p>
             )}
           </div>
 
-          {/* Email */}
+          {/* Email (read-only, not sent to backend) */}
           <div>
             <label className="text-sm text-voxy-muted mb-2 block flex items-center gap-1">
               <Mail size={14} /> Email
             </label>
-            {editMode ? (
-              <input
-                type="email"
-                name="email"
-                value={userProfile.email}
-                onChange={handleChange}
-                className="w-full px-3 py-2 rounded-lg bg-voxy-surface border border-voxy-border text-white focus:ring-2 focus:ring-voxy-primary/70 focus:outline-none"
-              />
-            ) : (
-              <p className="text-white">{userProfile.email}</p>
-            )}
-          </div>
-
-          {/* Role */}
-          <div>
-            <label className="text-sm text-voxy-muted mb-2 block flex items-center gap-1">
-              <Briefcase size={14} /> Role / Position
-            </label>
-            {editMode ? (
-              <input
-                type="text"
-                name="role"
-                value={profile.role}
-                onChange={handleChange}
-                className="w-full px-3 py-2 rounded-lg bg-voxy-surface border border-voxy-border text-white focus:ring-2 focus:ring-voxy-primary/70 focus:outline-none"
-              />
-            ) : (
-              <p className="text-white">{profile.role}</p>
-            )}
+            <input
+              type="email"
+              name="email"
+              value={userProfile.email || ""}
+              readOnly
+              className="w-full px-3 py-2 rounded-lg bg-voxy-surface border border-voxy-border text-gray-400 cursor-not-allowed opacity-70"
+            />
           </div>
         </div>
       </motion.div>

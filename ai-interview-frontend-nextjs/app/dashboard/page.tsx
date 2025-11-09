@@ -13,9 +13,9 @@ import {
   Menu,
   X,
 } from "lucide-react";
-import { useMemo, useState } from "react";
+import { useState, useEffect } from "react";
 import clsx from "clsx";
-import AnalyticsSection from "./(sections)/analytics/analyticsSection"; // ✅ import section
+import AnalyticsSection from "./(sections)/analytics/analyticsSection";
 import InterviewSection from "./(sections)/interview/interviewSection";
 import FeedbackSection from "./(sections)/feedbacks/feedbackSection";
 import ReportsSection from "./(sections)/reports/reportsSection";
@@ -24,25 +24,30 @@ import ProfileSection from "./(sections)/profile/profileSection";
 import SettingsSection from "./(sections)/settings/settingsSection";
 import LogoutSection from "./(sections)/logout/logoutSection";
 
-// Define sections with optional components
 const navItems = [
   { name: "Analytics", icon: BarChart3, component: <AnalyticsSection /> },
-  { name: "Interview", icon: MessageSquare, component: <InterviewSection/> },
-  { name: "Feedbacks", icon: FileText, component: <FeedbackSection/> },
-  { name: "Reports", icon: ClipboardList, component: <ReportsSection/> },
-  { name: "Plan", icon: Crown, component: <PlanSection/> },
-  { name: "Profile", icon: User, component: <ProfileSection/> },
-  { name: "Settings", icon: Settings, component: <SettingsSection/> },
-  { name: "Logout", icon: LogOut, component: <LogoutSection/> },
+  { name: "Interview", icon: MessageSquare, component: <InterviewSection /> },
+  { name: "Feedbacks", icon: FileText, component: <FeedbackSection /> },
+  { name: "Reports", icon: ClipboardList, component: <ReportsSection /> },
+  { name: "Plan", icon: Crown, component: <PlanSection /> },
+  { name: "Profile", icon: User, component: <ProfileSection /> },
+  { name: "Settings", icon: Settings, component: <SettingsSection /> },
+  { name: "Logout", icon: LogOut, component: <LogoutSection /> },
 ];
 
 export default function Dashboard() {
   const [active, setActive] = useState("Analytics");
   const [isOpen, setIsOpen] = useState(false);
 
+  // ✅ Fix: Generate avatar seed only on the client to prevent hydration mismatch
+  const [avatarUrl, setAvatarUrl] = useState<string | null>(null);
+  useEffect(() => {
+    const seed = Math.random().toString(36).substring(2, 9);
+    setAvatarUrl(`https://api.dicebear.com/9.x/adventurer/png?seed=${seed}`);
+  }, []);
+
   const activeItem = navItems.find((item) => item.name === active);
-  const randomSeed = useMemo(() => Math.random().toString(36).substring(2, 9), []);
-  const avatarUrl = `https://api.dicebear.com/9.x/adventurer/png?seed=${randomSeed}`;
+
   return (
     <div className="h-screen w-screen flex bg-gradient-to-br from-black via-voxy-surface to-black text-white overflow-hidden">
       {/* ===== SIDEBAR ===== */}
@@ -61,7 +66,7 @@ export default function Dashboard() {
         </div>
 
         {/* Nav Items */}
-        <nav className="flex-1 overflow-y-auto px-4 py-6 space-y-1">
+        <nav className="flex-1 overflow-y-auto px-4 py-6 space-y-1 custom-scroll">
           {navItems.map(({ name, icon: Icon }) => (
             <motion.button
               key={name}
@@ -116,17 +121,19 @@ export default function Dashboard() {
             whileHover={{ scale: 1.05 }}
             className="flex items-center gap-3 bg-voxy-surface/60 border border-voxy-border px-4 py-2 rounded-full shadow-inner cursor-pointer hover:bg-voxy-border/40 transition"
           >
-            <img
-              src={avatarUrl}
-              alt="User"
-              className="w-8 h-8 rounded-full border border-voxy-primary"
-            />
+            {avatarUrl && (
+              <img
+                src={avatarUrl}
+                alt="User"
+                className="w-8 h-8 rounded-full border border-voxy-primary"
+              />
+            )}
             <span className="text-sm hidden sm:block">Pranit Daphale</span>
           </motion.div>
         </header>
 
         {/* Scrollable Main Content */}
-        <div className="flex-1 overflow-y-auto p-4 sm:p-6 md:p-10">
+        <div className="flex-1 overflow-y-auto p-4 sm:p-6 md:p-10 custom-scroll">
           <AnimatePresence mode="wait">
             <motion.div
               key={active}
