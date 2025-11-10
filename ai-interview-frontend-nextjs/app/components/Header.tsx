@@ -49,7 +49,7 @@ const Header = () => {
         {/* CTA Button (Desktop) */}
         <div className="hidden md:block">
           <MotionLink
-            href="/register"
+            href="/auth/register"
             whileHover={{ scale: 1.05 }}
             whileTap={{ scale: 0.98 }}
             className="px-5 py-2.5 rounded-lg font-medium text-white transition bg-gradient-to-r from-voxy-primary to-voxy-secondary hover:opacity-90 shadow-md"

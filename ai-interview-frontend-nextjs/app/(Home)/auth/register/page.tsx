@@ -29,7 +29,7 @@ export default function Register() {
     setLoading(true);
     const response: any = await dispatch(asyncRegisterUser(data));
     setLoading(false);
-    console.log(response)
+
     if (response.success) {
       toast.success(response.message || "Registration successful!");
       router.push("/dashboard");
@@ -59,7 +59,7 @@ export default function Register() {
           initial={{ opacity: 0, y: 30 }}
           animate={{ opacity: 1, y: 0 }}
           transition={{ duration: 0.6, ease: "easeOut" }}
-          className="w-full max-w-md bg-voxy-surface/70 border border-voxy-border rounded-2xl shadow-lg shadow-voxy-primary/10 p-8 backdrop-blur-md"
+          className="w-full max-w-md bg-voxy-surface/80 border border-voxy-border rounded-2xl shadow-2xl shadow-voxy-primary/10 p-8 backdrop-blur-xl"
         >
           {/* Header */}
           <motion.h1
@@ -91,7 +91,7 @@ export default function Register() {
                 />
               </div>
               {errors.name && (
-                <p className="text-red-500 text-xs mt-1">{errors.name.message as string}</p>
+                <p className="text-voxy-accent text-xs mt-1">{errors.name.message as string}</p>
               )}
             </div>
 
@@ -110,13 +110,13 @@ export default function Register() {
                     required: "Email is required",
                     pattern: {
                       value: /^[^\s@]+@[^\s@]+\.[^\s@]+$/,
-                      message: "Enter a valid email",
+                      message: "Enter a valid email address",
                     },
                   })}
                 />
               </div>
               {errors.email && (
-                <p className="text-red-500 text-xs mt-1">{errors.email.message as string}</p>
+                <p className="text-voxy-accent text-xs mt-1">{errors.email.message as string}</p>
               )}
             </div>
 
@@ -141,14 +141,14 @@ export default function Register() {
                 />
               </div>
               {errors.password && (
-                <p className="text-red-500 text-xs mt-1">{errors.password.message as string}</p>
+                <p className="text-voxy-accent text-xs mt-1">{errors.password.message as string}</p>
               )}
             </div>
 
             {/* Forgot Password */}
             <div className="text-right">
               <Link
-                href="/forgot-password"
+                href="/auth/forget-password"
                 className="text-sm text-voxy-primary hover:text-voxy-secondary transition"
               >
                 Forgot Password?
@@ -162,9 +162,10 @@ export default function Register() {
               disabled={loading}
               type="submit"
               className={`w-full py-3 rounded-lg font-semibold transition flex items-center justify-center gap-2
-                ${loading
-                  ? "bg-voxy-border text-gray-400 cursor-not-allowed"
-                  : "bg-voxy-primary hover:bg-voxy-secondary text-white shadow-md hover:shadow-voxy-primary/20"
+                ${
+                  loading
+                    ? "bg-voxy-border text-voxy-muted cursor-not-allowed"
+                    : "bg-gradient-to-r from-voxy-primary to-voxy-secondary text-voxy-text shadow-md hover:opacity-90"
                 }`}
             >
               {loading ? "Creating Account..." : "Create Account"}
@@ -180,7 +181,10 @@ export default function Register() {
 
             {/* Google Register */}
             <div className="flex justify-center">
-              <GoogleLogin onSuccess={handleGoogleSuccess} onError={() => toast.error("Google login failed!")} />
+              <GoogleLogin
+                onSuccess={handleGoogleSuccess}
+                onError={() => toast.error("Google login failed!")}
+              />
             </div>
           </form>
 

@@ -1,101 +1,163 @@
 "use client";
 
-import Footer from "@/app/components/Footer";
-import Header from "@/app/components/Header";
+import dynamic from "next/dynamic";
 import { motion } from "framer-motion";
 import { CheckCircle, Star } from "lucide-react";
+import { useMemo } from "react";
+import { toast } from "react-toastify";
+
+// ✅ Lazy-load layout components
+const Header = dynamic(() => import("@/app/components/Header"));
+const Footer = dynamic(() => import("@/app/components/Footer"));
+
+// ✅ Shared motion variant
+const fadeUp = {
+  hidden: { opacity: 0, y: 30 },
+  visible: (delay = 0) => ({
+    opacity: 1,
+    y: 0,
+    transition: { duration: 0.8, delay },
+  }),
+};
 
 export default function Pricing() {
-  const plans = [
-    {
-      name: "Free",
-      price: "$0",
-      subtitle: "Perfect for individuals exploring AI interviews.",
-      features: [
-        "Up to 5 interviews/month",
-        "Basic AI feedback",
-        "Limited analytics",
-        "Email support",
-      ],
-      button: "Get Started",
-      highlight: false,
-    },
-    {
-      name: "Pro",
-      price: "$29",
-      subtitle: "Ideal for recruiters and growing teams.",
-      features: [
-        "Unlimited interviews",
-        "Advanced analytics",
-        "Custom feedback templates",
-        "Priority support",
-      ],
-      button: "Upgrade to Pro",
-      highlight: true,
-    },
-    {
-      name: "Enterprise",
-      price: "Custom",
-      subtitle: "For large organizations that need scalability.",
-      features: [
-        "Unlimited everything",
-        "Dedicated AI model tuning",
-        "Admin dashboard",
-        "Dedicated success manager",
-      ],
-      button: "Contact Sales",
-      highlight: false,
-    },
-  ];
+  // ✅ Plans (memoized for performance)
+  const plans = useMemo(
+    () => [
+      {
+        name: "Free",
+        price: "$0",
+        subtitle: "Perfect for individuals exploring AI interviews.",
+        features: [
+          "Up to 5 interviews/month",
+          "Basic AI feedback",
+          "Limited analytics",
+          "Email support",
+        ],
+        button: "Get Started",
+        highlight: false,
+      },
+      {
+        name: "Pro",
+        price: "$29/mo",
+        subtitle: "Ideal for recruiters and growing teams.",
+        features: [
+          "Unlimited interviews",
+          "Advanced analytics",
+          "Custom feedback templates",
+          "Priority support",
+        ],
+        button: "Upgrade to Pro",
+        highlight: true,
+      },
+      {
+        name: "Enterprise",
+        price: "Custom",
+        subtitle: "For large organizations that need scalability.",
+        features: [
+          "Unlimited everything",
+          "Dedicated AI model tuning",
+          "Admin dashboard",
+          "Dedicated success manager",
+        ],
+        button: "Contact Sales",
+        highlight: false,
+      },
+    ],
+    []
+  );
+
+  // ✅ FAQs (memoized)
+  const faqs = useMemo(
+    () => [
+      {
+        q: "Can I change my plan later?",
+        a: "Absolutely! You can upgrade or downgrade anytime from your dashboard.",
+      },
+      {
+        q: "Is there a free trial?",
+        a: "Yes, the free plan lets you experience core features before upgrading.",
+      },
+      {
+        q: "Do you offer enterprise support?",
+        a: "Yes! Enterprise clients get dedicated onboarding, AI customization, and 24/7 support.",
+      },
+    ],
+    []
+  );
+
+  // ⚙️ Razorpay integration ready (demo)
+  const handlePayment = async (plan: string) => {
+    if (plan === "Pro") {
+      toast.info("Redirecting to Razorpay checkout… (Demo)");
+      // TODO: integrate Razorpay/Stripe API here
+    } else if (plan === "Enterprise") {
+      toast.info("Our sales team will contact you shortly!");
+    } else {
+      toast.success("You're on the Free plan — start using SwarAI now!");
+    }
+  };
 
   return (
-    <main className="min-h-screen bg-gradient-to-b from-voxy-bg via-voxy-surface to-voxy-bg text-voxy-text py-24 px-6">
-      <Header/>
-      {/* 🧠 Heading */}
-      <motion.div
-        initial={{ opacity: 0, y: 20 }}
-        animate={{ opacity: 1, y: 0 }}
-        className="text-center mb-12"
-      >
-        <h1 className="text-4xl md:text-6xl font-extrabold mb-4">
-          Pricing <span className="text-voxy-primary">Plans</span>
-        </h1>
-        <p className="text-voxy-muted text-lg max-w-2xl mx-auto">
-          Choose a plan that fits your hiring needs. Scale effortlessly with
-          intelligent AI insights.
-        </p>
-      </motion.div>
+    <main className="min-h-screen bg-gradient-to-b from-voxy-bg via-voxy-surface to-voxy-bg text-voxy-text font-sans overflow-hidden">
+      <Header />
 
-      {/* 💳 Plans */}
-      <div className="grid md:grid-cols-3 gap-10 max-w-6xl mx-auto">
+      {/* === HEADING === */}
+      <section className="text-center py-28 px-6">
+        <motion.div
+          variants={fadeUp}
+          initial="hidden"
+          animate="visible"
+          className="space-y-4"
+        >
+          <h1 className="text-4xl md:text-6xl font-extrabold">
+            Pricing <span className="text-voxy-primary">Plans</span>
+          </h1>
+          <p className="text-voxy-muted text-lg max-w-2xl mx-auto">
+            Choose the perfect plan for your AI interview experience.
+            Scale effortlessly with intelligent insights.
+          </p>
+        </motion.div>
+      </section>
+
+      {/* === PRICING CARDS === */}
+      <section
+        aria-label="Pricing Plans"
+        className="grid md:grid-cols-3 gap-10 max-w-6xl mx-auto px-6"
+      >
         {plans.map((plan, i) => (
-          <motion.div
-            key={i}
-            initial={{ opacity: 0, y: 40 }}
-            whileInView={{ opacity: 1, y: 0 }}
-            transition={{ duration: 0.6, delay: i * 0.2 }}
-            className={`relative p-8 rounded-2xl border shadow-lg transition-transform hover:scale-105 ${
+          <motion.article
+            key={plan.name}
+            variants={fadeUp}
+            initial="hidden"
+            whileInView="visible"
+            viewport={{ once: true, margin: "-50px" }}
+            custom={i * 0.2}
+            className={`relative p-8 rounded-2xl border shadow-lg transition-all transform-gpu hover:scale-105 ${
               plan.highlight
-                ? "bg-voxy-primary border-voxy-secondary shadow-voxy-primary/30"
-                : "bg-voxy-surface/50 border-voxy-border hover:border-voxy-primary hover:shadow-voxy-primary/20"
+                ? "bg-gradient-to-b from-voxy-primary to-voxy-secondary border-voxy-primary text-white shadow-voxy-primary/40"
+                : "bg-voxy-surface/60 border-voxy-border hover:border-voxy-primary hover:shadow-voxy-primary/20"
             }`}
           >
+            {/* Highlight Badge */}
             {plan.highlight && (
-              <div className="absolute -top-4 left-1/2 transform -translate-x-1/2 bg-voxy-accent text-white font-semibold text-sm px-4 py-1 rounded-full flex items-center gap-1 shadow-md">
-                <Star className="w-4 h-4" /> Most Popular
+              <div className="absolute -top-4 left-1/2 -translate-x-1/2 bg-yellow-400 text-black font-semibold text-xs px-4 py-1 rounded-full flex items-center gap-1 shadow-md">
+                <Star className="w-4 h-4" />
+                Most Popular
               </div>
             )}
 
             <h3 className="text-2xl font-semibold mb-2">{plan.name}</h3>
             <p
               className={`mb-6 ${
-                plan.highlight ? "text-voxy-text/90" : "text-voxy-muted"
+                plan.highlight ? "text-white/90" : "text-voxy-muted"
               }`}
             >
               {plan.subtitle}
             </p>
             <p className="text-5xl font-extrabold mb-6">{plan.price}</p>
 
+            {/* Features */}
             <ul className="space-y-3 text-left">
               {plan.features.map((feature, idx) => (
                 <li key={idx} className="flex items-center gap-2">
@@ -109,9 +171,12 @@ export default function Pricing() {
               ))}
             </ul>
 
+            {/* Action Button */}
             <motion.button
               whileHover={{ scale: 1.05 }}
               whileTap={{ scale: 0.97 }}
+              onClick={() => handlePayment(plan.name)}
+              aria-label={`Select ${plan.name} plan`}
               className={`w-full mt-10 py-3 rounded-lg font-semibold transition shadow-md ${
                 plan.highlight
                   ? "bg-white text-voxy-primary hover:bg-gray-100"
@@ -120,71 +185,67 @@ export default function Pricing() {
             >
               {plan.button}
             </motion.button>
-          </motion.div>
+          </motion.article>
         ))}
-      </div>
+      </section>
 
-      {/* ⚙️ FAQ Section */}
-      <section className="max-w-4xl mx-auto mt-32">
+      {/* === FAQ SECTION === */}
+      <section className="max-w-4xl mx-auto mt-32 px-6">
         <motion.h2
-          initial={{ opacity: 0, y: 10 }}
-          whileInView={{ opacity: 1, y: 0 }}
-          transition={{ duration: 0.5 }}
-          className="text-3xl font-bold text-center mb-8"
+          variants={fadeUp}
+          initial="hidden"
+          whileInView="visible"
+          viewport={{ once: true }}
+          className="text-3xl font-bold text-center mb-10"
         >
           Frequently Asked <span className="text-voxy-primary">Questions</span>
         </motion.h2>
 
         <div className="space-y-6">
-          {[
-            {
-              q: "Can I change my plan later?",
-              a: "Absolutely! You can upgrade or downgrade your plan anytime from your account dashboard.",
-            },
-            {
-              q: "Is there a free trial?",
-              a: "Yes, every user starts with a free plan that includes limited interviews per month.",
-            },
-            {
-              q: "Do you offer enterprise support?",
-              a: "Yes. Our enterprise plan includes a dedicated account manager, team onboarding, and custom AI tuning.",
-            },
-          ].map((faq, i) => (
+          {faqs.map((faq, i) => (
             <motion.div
-              key={i}
-              initial={{ opacity: 0, y: 10 }}
-              whileInView={{ opacity: 1, y: 0 }}
-              transition={{ delay: i * 0.1 }}
-              className="bg-voxy-surface/50 border border-voxy-border rounded-xl p-6 hover:border-voxy-primary transition shadow-sm hover:shadow-voxy-primary/20"
+              key={faq.q}
+              variants={fadeUp}
+              initial="hidden"
+              whileInView="visible"
+              viewport={{ once: true }}
+              custom={i * 0.15}
+              className="bg-voxy-surface/50 border border-voxy-border rounded-xl p-6 hover:border-voxy-primary transition-all shadow-sm hover:shadow-voxy-primary/20"
             >
               <h3 className="text-xl font-semibold mb-2">{faq.q}</h3>
-              <p className="text-voxy-muted">{faq.a}</p>
+              <p className="text-voxy-muted leading-relaxed">{faq.a}</p>
             </motion.div>
           ))}
         </div>
       </section>
 
-      {/* 💫 CTA */}
-      <section className="mt-32 text-center">
+      {/* === CTA SECTION === */}
+      <section className="mt-32 text-center px-6 mb-24">
         <motion.div
-          initial={{ opacity: 0 }}
-          whileInView={{ opacity: 1 }}
-          transition={{ duration: 0.8 }}
-          className="bg-gradient-to-r from-voxy-primary to-voxy-secondary py-16 rounded-2xl max-w-5xl mx-auto"
+          variants={fadeUp}
+          initial="hidden"
+          whileInView="visible"
+          viewport={{ once: true }}
+          className="bg-gradient-to-r from-voxy-primary to-voxy-secondary py-16 rounded-2xl max-w-5xl mx-auto shadow-xl"
         >
-          <h2 className="text-3xl md:text-4xl font-bold mb-4">
+          <h2 className="text-3xl md:text-4xl font-bold mb-4 text-white">
             Ready to Power Your Interviews?
           </h2>
-          <p className="text-voxy-highlight mb-8 text-lg">
-            Start your free plan today and experience the future of interview
-            intelligence.
+          <p className="text-white/80 mb-8 text-lg">
+            Start your free plan today and experience AI-powered interview intelligence.
           </p>
-          <button className="px-8 py-4 bg-white text-voxy-primary font-semibold rounded-xl hover:bg-gray-100 transition">
+          <motion.button
+            whileHover={{ scale: 1.05 }}
+            whileTap={{ scale: 0.97 }}
+            onClick={() => handlePayment("Free")}
+            className="px-8 py-4 bg-white text-voxy-primary font-semibold rounded-xl hover:bg-gray-100 transition-all"
+          >
             Get Started for Free
-          </button>
+          </motion.button>
         </motion.div>
       </section>
-      <Footer/>
+
+      <Footer />
     </main>
   );
 }

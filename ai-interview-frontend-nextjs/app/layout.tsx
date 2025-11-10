@@ -27,18 +27,29 @@ export default function RootLayout({
   children: React.ReactNode;
 }) {
   return (
-    <html lang="en">
+    <html
+      lang="en"
+    >
+      <head>
+    
+        <script
+          dangerouslySetInnerHTML={{
+            __html: `(function(){try{
+              var theme = localStorage.getItem('theme');
+              if(theme === 'light'){ document.documentElement.classList.add('light'); return; }
+              if(theme === 'dark'){ document.documentElement.classList.remove('light'); return; }
+              if(window.matchMedia && window.matchMedia('(prefers-color-scheme: light)').matches){
+                document.documentElement.classList.add('light');
+              }
+            }catch(e){/* silent */}})();`,
+          }}
+        />
+      </head>
+
       <body>
         <StoreProvider>
-          <GoogleOAuthProvider
-            clientId={process.env.NEXT_PUBLIC_GOOGLE_CLIENT_ID!}
-          >
-            <ToastContainer
-              position="top-right"
-              autoClose={3000}
-              theme="colored"
-            />
-            
+          <GoogleOAuthProvider clientId={process.env.NEXT_PUBLIC_GOOGLE_CLIENT_ID!}>
+            <ToastContainer position="top-right" autoClose={3000} theme="colored" />
             <AppInitializer />
             {children}
           </GoogleOAuthProvider>

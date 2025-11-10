@@ -60,7 +60,7 @@ export default function Login() {
           initial={{ opacity: 0, y: 30 }}
           animate={{ opacity: 1, y: 0 }}
           transition={{ duration: 0.8 }}
-          className="w-full max-w-md bg-voxy-surface/70 border border-voxy-border rounded-2xl shadow-lg shadow-voxy-primary/10 p-8 backdrop-blur-md"
+          className="w-full max-w-md bg-voxy-surface/80 border border-voxy-border rounded-2xl shadow-2xl shadow-voxy-primary/10 p-8 backdrop-blur-xl"
         >
           {/* Header */}
           <motion.h1
@@ -90,12 +90,13 @@ export default function Login() {
                   className="w-full bg-transparent p-3 outline-none text-voxy-text placeholder-voxy-muted"
                   {...register("email", {
                     required: "Email is required",
-                    
                   })}
                 />
               </div>
               {errors.email && (
-                <p className="text-red-500 text-xs mt-1">{errors.email.message as string}</p>
+                <p className="text-voxy-accent text-xs mt-1">
+                  {errors.email.message as string}
+                </p>
               )}
             </div>
 
@@ -113,14 +114,16 @@ export default function Login() {
                   {...register("password", {
                     required: "Password is required",
                     minLength: {
-                      value: 2,
+                      value: 6,
                       message: "Password must be at least 6 characters",
                     },
                   })}
                 />
               </div>
               {errors.password && (
-                <p className="text-red-500 text-xs mt-1">{errors.password.message as string}</p>
+                <p className="text-voxy-accent text-xs mt-1">
+                  {errors.password.message as string}
+                </p>
               )}
             </div>
 
@@ -140,10 +143,11 @@ export default function Login() {
               whileTap={!loading ? { scale: 0.98 } : {}}
               disabled={loading}
               type="submit"
-              className={`w-full py-3 rounded-lg font-semibold transition flex items-center justify-center gap-2
-                ${loading
-                  ? "bg-voxy-border text-gray-400 cursor-not-allowed"
-                  : "bg-voxy-primary hover:bg-voxy-secondary text-white shadow-md hover:shadow-voxy-primary/20"
+              className={`w-full py-3 rounded-lg font-semibold transition flex items-center justify-center gap-2 
+                ${
+                  loading
+                    ? "bg-voxy-border text-voxy-muted cursor-not-allowed"
+                    : "bg-gradient-to-r from-voxy-primary to-voxy-secondary text-voxy-text shadow-md hover:opacity-90"
                 }`}
             >
               {loading ? "Logging in..." : "Log In"}

@@ -1,111 +1,65 @@
 @import "tailwindcss";
 
-/* === VoxyAI Global Theme === */
+/* === 🌗 VOXY AI GLOBAL THEME === */
 @theme {
-  /* Backgrounds */
+  /* 🌙 Dark mode (default) */
   --color-voxy-bg: #0b0b10;
   --color-voxy-surface: #12121a;
-
-  /* Text */
   --color-voxy-text: #f1f1f2;
   --color-voxy-muted: #a1a1aa;
-
-  /* Borders */
   --color-voxy-border: #1f1f29;
-
-  /* Brand Palette */
   --color-voxy-primary: #6366f1; /* indigo-500 */
   --color-voxy-secondary: #8b5cf6; /* violet-500 */
   --color-voxy-accent: #a855f7; /* purple-500 */
   --color-voxy-highlight: #818cf8; /* soft accent */
-
-  /* Gradients */
-  --gradient-voxy: linear-gradient(90deg, var(--color-voxy-primary), var(--color-voxy-secondary));
-
-  /* Fonts */
-  --font-sans: "Inter", "Poppins", sans-serif;
 }
 
+/* ☀️ Light mode overrides (outside @theme) */
+html.light {
+  --color-voxy-bg: #f8f8fc;
+  --color-voxy-surface: #ffffff;
+  --color-voxy-text: #1a1a1a;
+  --color-voxy-muted: #555555;
+  --color-voxy-border: #e3e3e8;
+  --color-voxy-primary: #6366f1;
+  --color-voxy-secondary: #8b5cf6;
+  --color-voxy-accent: #a855f7;
+  --color-voxy-highlight: #6366f1;
+}
+
+/* === Base styles === */
 @layer base {
   html {
-    @apply bg-voxy-bg text-voxy-text font-sans scroll-smooth;
+    @apply bg-voxy-bg text-voxy-text font-sans scroll-smooth transition-colors duration-300;
   }
+
   a {
     @apply text-voxy-primary hover:text-voxy-secondary transition;
   }
+
   button {
     @apply font-medium cursor-pointer;
   }
+
 }
 
-/* === 🌈 VoxyAI Global Scrollbar === */
-/* Applies everywhere (modals, pages, dashboard) */
 
+/* === Scrollbar styling === */
 html {
   scrollbar-width: thin;
   scrollbar-color: rgba(255, 255, 255, 0.15) transparent;
   scroll-behavior: smooth;
 }
 
-/* WebKit browsers */
 ::-webkit-scrollbar {
   width: 10px;
-  height: 10px;
-  background: transparent;
-}
-
-::-webkit-scrollbar-track {
-  background: transparent;
 }
 
 ::-webkit-scrollbar-thumb {
   background: linear-gradient(
     180deg,
-    rgba(111, 114, 255, 0.3),
-    rgba(155, 107, 255, 0.25)
+    rgba(111, 114, 255, 0.4),
+    rgba(155, 107, 255, 0.3)
   );
-  border-radius: 12px;
-  border: 2px solid transparent;
-  background-clip: padding-box;
-  transition: all 0.3s ease;
-}
-
-::-webkit-scrollbar-thumb:hover {
-  background: linear-gradient(
-    180deg,
-    rgba(111, 114, 255, 0.55),
-    rgba(155, 107, 255, 0.45)
-  );
-  box-shadow: 0 0 8px rgba(155, 107, 255, 0.4);
-}
-
-::-webkit-scrollbar-thumb:active {
-  background: linear-gradient(
-    180deg,
-    rgba(111, 114, 255, 0.7),
-    rgba(155, 107, 255, 0.6)
-  );
-}
-
-::-webkit-scrollbar-corner {
-  background: transparent;
-}
-
-/* Smooth scroll & overscroll control for all pages */
-html,
-body {
-  scroll-behavior: smooth;
-  overscroll-behavior: contain;
-}
-
-/* === Optional Fade-In Scrollbar Effect === */
-/* Makes scrollbar appear only when scrolling or hovering */
-html::-webkit-scrollbar-thumb {
-  opacity: 0;
-}
-html:hover::-webkit-scrollbar-thumb,
-html:active::-webkit-scrollbar-thumb,
-html::-webkit-scrollbar-thumb:hover {
-  opacity: 1;
-  transition: opacity 0.3s ease;
+  border-radius: 10px;
 }
