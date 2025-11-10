@@ -5,6 +5,8 @@ import StoreProvider from "./providers/StoreProvider";
 import { GoogleOAuthProvider } from "@react-oauth/google";
 import AppInitializer from "./components/AppInitializer";
 import { ToastContainer } from "react-toastify";
+import Preloader from "./components/preloader/SwarAiPreloader";
+import { DarkLight } from "./components/DarkLightMood/DarkLight";
 
 const geistSans = Geist({
   variable: "--font-geist-sans",
@@ -30,27 +32,14 @@ export default function RootLayout({
     <html
       lang="en"
     >
-      <head>
-    
-        <script
-          dangerouslySetInnerHTML={{
-            __html: `(function(){try{
-              var theme = localStorage.getItem('theme');
-              if(theme === 'light'){ document.documentElement.classList.add('light'); return; }
-              if(theme === 'dark'){ document.documentElement.classList.remove('light'); return; }
-              if(window.matchMedia && window.matchMedia('(prefers-color-scheme: light)').matches){
-                document.documentElement.classList.add('light');
-              }
-            }catch(e){/* silent */}})();`,
-          }}
-        />
-      </head>
 
       <body>
         <StoreProvider>
           <GoogleOAuthProvider clientId={process.env.NEXT_PUBLIC_GOOGLE_CLIENT_ID!}>
             <ToastContainer position="top-right" autoClose={3000} theme="colored" />
             <AppInitializer />
+            <Preloader/>
+            <DarkLight/>
             {children}
           </GoogleOAuthProvider>
         </StoreProvider>

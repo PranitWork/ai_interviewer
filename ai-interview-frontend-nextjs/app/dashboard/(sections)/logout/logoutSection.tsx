@@ -25,15 +25,26 @@ export default function LogoutSection() {
 
   // ✅ Grab userProfile from Redux
   const userProfile = useSelector((state: any) => state.userReducer.userProfile);
+  console.log(userProfile)
+ const createdDate = new Date(userProfile?.createdAt).toLocaleString("en-IN", {
+  day: "2-digit",
+  month: "short",
+  year: "numeric",
+  hour: "2-digit",
+  minute: "2-digit",
+  hour12: true,
+});
 
-  const user = {
-    name: userProfile?.name || "Unknown User",
-    email: userProfile?.email || "N/A",
-    plan: userProfile?.plan || "Free",
-    createdAt: new Date(userProfile?.createdAt).toLocaleDateString(),
-    usage: userProfile?.usage || { interviewsConducted: 0, feedbacksGenerated: 0 },
-  };
-
+const user = {
+  name: userProfile?.name || "Unknown User",
+  email: userProfile?.email || "N/A",
+  plan: userProfile?.plan || "Free",
+  createdAt: createdDate,
+  usage: userProfile?.usage || {
+    interviewsConducted: 0,
+    feedbacksGenerated: 0,
+  },
+};
   // ✅ Logout Logic (uses asyncLogoutUser)
   const handleLogout = async () => {
     setIsLoggingOut(true);

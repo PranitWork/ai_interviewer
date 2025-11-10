@@ -2,89 +2,115 @@
 
 import dynamic from "next/dynamic";
 import { motion } from "framer-motion";
-import { Brain, UserCheck, Mic, BarChart3, Sparkles, Zap } from "lucide-react";
-import { useMemo } from "react";
+import {
+  Brain,
+  UserCheck,
+  Mic,
+  BarChart3,
+  Sparkles,
+  Zap,
+  LucideIcon
+} from "lucide-react";
+import { useMemo, Suspense } from "react";
 
-// ✅ Lazy-load layout components for performance
-const Header = dynamic(() => import("@/app/components/Header"));
-const Footer = dynamic(() => import("@/app/components/Footer"));
+// ✅ Lazy-load layout components
+const Header = dynamic(() => import("@/app/components/Header"), {
+  ssr: false,
+  loading: () => <div className="h-16" />,
+});
+const Footer = dynamic(() => import("@/app/components/Footer"), {
+  ssr: false,
+  loading: () => <div className="h-32" />,
+});
 
-// ✅ Shared fade-up animation variant
+// ✅ Animation Variants
 const fadeUp = {
-  hidden: { opacity: 0, y: 30 },
-  visible: (delay = 0) => ({
+  hidden: { opacity: 0, y: 25 },
+  visible: (i: number = 0) => ({
     opacity: 1,
     y: 0,
-    transition: { duration: 0.8, delay },
+    transition: {
+      duration: 0.7,
+      delay: i * 0.15,
+      ease: "easeOut",
+    },
   }),
 };
 
+interface FeatureItem {
+  icon: LucideIcon;
+  title: string;
+  desc: string;
+}
+
 export default function Features() {
-  // ✅ Memoized feature list
-  const features = useMemo(
+  /** ✅ Memoized list */
+  const features: FeatureItem[] = useMemo(
     () => [
       {
         icon: Brain,
         title: "AI Interview Assistant",
-        desc: "Conduct structured, realistic interviews with an intelligent AI that evaluates every answer in real time.",
+        desc: "Conduct structured, realistic interviews with AI that evaluates responses in real time.",
       },
       {
         icon: UserCheck,
         title: "Candidate Scoring",
-        desc: "Automatically assess communication, confidence, and technical accuracy to generate fair and consistent ratings.",
+        desc: "Get automated assessments on communication, confidence, and technical ability.",
       },
       {
         icon: Mic,
         title: "Voice & Tone Analysis",
-        desc: "Leverage voice AI to analyze tone, pacing, clarity, and emotional expression in candidate speech.",
+        desc: "Analyze pace, tone, clarity, and emotional patterns during candidate speech.",
       },
       {
         icon: BarChart3,
         title: "Dashboard Insights",
-        desc: "Get data-driven analytics on performance trends, question-wise breakdowns, and comparative benchmarking.",
+        desc: "Explore breakdowns, analytics, skill trends, and comparative benchmarking.",
       },
       {
         icon: Sparkles,
         title: "Smart Suggestions",
-        desc: "Receive AI-powered improvement tips and model answers customized to candidate skill levels.",
+        desc: "Receive auto-generated feedback and learning recommendations tailored to the candidate.",
       },
       {
         icon: Zap,
         title: "Instant Interview Summaries",
-        desc: "Generate professional summaries and feedback reports instantly after each interview session.",
+        desc: "Generate professional summaries and PDF reports instantly post-interview.",
       },
     ],
     []
   );
 
   return (
-    <div className="flex flex-col min-h-screen bg-gradient-to-b from-voxy-bg via-voxy-surface to-voxy-bg text-voxy-text font-sans overflow-hidden">
+    <div className="flex flex-col min-h-screen font-sans bg-gradient-to-b from-voxy-bg via-voxy-surface to-voxy-bg text-voxy-text overflow-hidden">
       {/* === HEADER === */}
-      <Header />
+      <Suspense>
+        <Header />
+      </Suspense>
 
       {/* === MAIN CONTENT === */}
-      <main className="flex-1 container mx-auto px-6 py-24">
-        {/* Title */}
+      <main className="flex-1 container mx-auto px-6 py-20 md:py-28">
         <motion.div
           variants={fadeUp}
           initial="hidden"
           animate="visible"
           className="text-center mb-16"
         >
-          <h1 className="text-4xl md:text-5xl font-extrabold leading-tight">
+          <h1 className="text-[2.4rem] md:text-5xl font-extrabold leading-tight">
             Powerful AI-Driven{" "}
             <span className="text-voxy-primary">Interview Features</span>
           </h1>
+
           <p className="mt-4 text-voxy-muted text-lg max-w-2xl mx-auto">
-            Empower your interview process with AI-enhanced analysis, real-time insights,
-            and automated performance intelligence.
+            Level-up recruiting with AI insights, automated reports, voice
+            analysis, and real-time intelligence.
           </p>
         </motion.div>
 
-        {/* Feature Grid */}
+        {/* === FEATURES GRID === */}
         <section
-          aria-label="AI Interview Features"
-          className="grid sm:grid-cols-2 lg:grid-cols-3 gap-10 max-w-6xl mx-auto"
+          aria-label="List of AI Interview Features"
+          className="grid sm:grid-cols-2 lg:grid-cols-3 gap-8 max-w-6xl mx-auto"
         >
           {features.map((f, i) => (
             <motion.article
@@ -93,14 +119,15 @@ export default function Features() {
               initial="hidden"
               whileInView="visible"
               viewport={{ once: true, margin: "-50px" }}
-              custom={i * 0.15}
-              className="group p-8 rounded-2xl border border-voxy-border bg-voxy-surface/70 backdrop-blur-lg shadow-lg 
-                         hover:shadow-voxy-primary/25 hover:border-voxy-primary/80 transition-all duration-300 
-                         transform-gpu hover:-translate-y-1"
+              custom={i}
+              className="group p-7 sm:p-8 rounded-2xl border border-voxy-border bg-voxy-surface/70 backdrop-blur-md 
+                         shadow-lg hover:shadow-voxy-primary/25 hover:border-voxy-primary/80 transition-all 
+                         duration-300 transform-gpu hover:-translate-y-1"
             >
               <div className="mb-6 text-voxy-primary group-hover:scale-110 transition-transform duration-300">
                 <f.icon className="w-10 h-10" aria-hidden="true" />
               </div>
+
               <h3 className="text-xl font-semibold mb-2">{f.title}</h3>
               <p className="text-voxy-muted leading-relaxed">{f.desc}</p>
             </motion.article>
@@ -114,26 +141,30 @@ export default function Features() {
         initial="hidden"
         whileInView="visible"
         viewport={{ once: true }}
-        className="text-center py-24 px-6"
+        className="text-center py-20 px-6 bg-transparent"
       >
         <div className="max-w-4xl mx-auto bg-gradient-to-r from-voxy-primary to-voxy-secondary p-10 rounded-2xl shadow-xl">
-          <h2 className="text-3xl md:text-4xl font-bold mb-3">
+          <h2 className="text-3xl md:text-4xl font-bold mb-4 text-white">
             Ready to Experience AI Interviews?
           </h2>
+
           <p className="text-voxy-highlight mb-6 text-lg">
-            Try SwarAI and revolutionize your candidate evaluations today.
+            Try SwarAI and transform your hiring experience.
           </p>
+
           <a
             href="/auth/register"
             className="inline-block bg-white text-voxy-primary font-semibold px-8 py-3 rounded-xl shadow-md hover:bg-gray-100 transition-all"
           >
-            Get Started for Free
+            Get Started Free
           </a>
         </div>
       </motion.section>
 
       {/* === FOOTER === */}
-      <Footer />
+      <Suspense>
+        <Footer />
+      </Suspense>
     </div>
   );
 }

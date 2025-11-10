@@ -4,7 +4,7 @@ import { motion } from "framer-motion";
 import { Brain, Sparkles, Mic, Bot } from "lucide-react";
 import dynamic from "next/dynamic";
 import { useMemo } from "react";
-
+import Link from "next/link";
 // ✅ Lazy-load heavy components for faster initial page render
 const Header = dynamic(() => import("./components/Header"));
 const Footer = dynamic(() => import("./components/Footer"));
@@ -94,12 +94,12 @@ export default function Home() {
           custom={0.6}
           className="mt-10 flex space-x-4"
         >
-          <button className="px-6 py-3 rounded-lg font-semibold bg-gradient-to-r from-voxy-primary to-voxy-secondary text-voxy-text shadow-md hover:opacity-90 transition-all">
+          <Link href="/auth/register" className="px-6 py-3 rounded-lg font-semibold bg-gradient-to-r from-voxy-primary to-voxy-secondary text-voxy-text shadow-md hover:opacity-90 transition-all">
             Try For Free
-          </button>
-          <button className="px-6 py-3 border border-voxy-border hover:bg-voxy-surface/50 rounded-lg font-semibold text-voxy-text transition-all">
+          </Link>
+          <Link href="/features" className="px-6 py-3 border border-voxy-border hover:bg-voxy-surface/50 rounded-lg font-semibold text-voxy-text transition-all">
             Learn More
-          </button>
+          </Link>
         </motion.div>
       </section>
 

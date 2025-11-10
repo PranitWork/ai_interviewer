@@ -19,7 +19,6 @@ export default function AnalyticsSection() {
   const analytics = useSelector(
     (state: RootState) => state.analyticsReducer.userAnalytics
   );
-
   useEffect(() => {
     dispatch(getUserAnalytics());
   }, [dispatch]);
