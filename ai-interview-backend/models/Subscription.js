@@ -3,7 +3,7 @@ import mongoose from "mongoose";
 const subscriptionSchema = new mongoose.Schema(
   {
     user: { type: mongoose.Schema.Types.ObjectId, ref: "User", required: true },
-    plan: { type: String, enum: ["free", "pro", "enterprise"], default: "free" },
+    plan: { type: String, enum: ["free", "pro", "advance"], default: "free" },
     razorpayOrderId: String,
     razorpayPaymentId: String,
     razorpaySubscriptionId: String, // optional if using Razorpay subscriptions

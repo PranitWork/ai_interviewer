@@ -9,21 +9,13 @@ import {
   BarChart3,
   Sparkles,
   Zap,
-  LucideIcon
+  LucideIcon,
 } from "lucide-react";
 import { useMemo, Suspense } from "react";
 
-// ✅ Lazy-load layout components
-const Header = dynamic(() => import("@/app/components/Header"), {
-  ssr: false,
-  loading: () => <div className="h-16" />,
-});
-const Footer = dynamic(() => import("@/app/components/Footer"), {
-  ssr: false,
-  loading: () => <div className="h-32" />,
-});
+const Header = dynamic(() => import("@/app/components/Header"), { ssr: false });
+const Footer = dynamic(() => import("@/app/components/Footer"), { ssr: false });
 
-// ✅ Animation Variants
 const fadeUp = {
   hidden: { opacity: 0, y: 25 },
   visible: (i: number = 0) => ({
@@ -44,7 +36,6 @@ interface FeatureItem {
 }
 
 export default function Features() {
-  /** ✅ Memoized list */
   const features: FeatureItem[] = useMemo(
     () => [
       {
@@ -84,11 +75,11 @@ export default function Features() {
   return (
     <div className="flex flex-col min-h-screen font-sans bg-gradient-to-b from-voxy-bg via-voxy-surface to-voxy-bg text-voxy-text overflow-hidden">
       {/* === HEADER === */}
-      <Suspense>
+      <Suspense fallback={<div className="h-16" />}>
         <Header />
       </Suspense>
 
-      {/* === MAIN CONTENT === */}
+      {/* === MAIN === */}
       <main className="flex-1 container mx-auto px-6 py-20 md:py-28">
         <motion.div
           variants={fadeUp}
@@ -100,7 +91,6 @@ export default function Features() {
             Powerful AI-Driven{" "}
             <span className="text-voxy-primary">Interview Features</span>
           </h1>
-
           <p className="mt-4 text-voxy-muted text-lg max-w-2xl mx-auto">
             Level-up recruiting with AI insights, automated reports, voice
             analysis, and real-time intelligence.
@@ -118,7 +108,7 @@ export default function Features() {
               variants={fadeUp}
               initial="hidden"
               whileInView="visible"
-              viewport={{ once: true, margin: "-50px" }}
+              viewport={{ once: true, amount: 0.3 }}
               custom={i}
               className="group p-7 sm:p-8 rounded-2xl border border-voxy-border bg-voxy-surface/70 backdrop-blur-md 
                          shadow-lg hover:shadow-voxy-primary/25 hover:border-voxy-primary/80 transition-all 
@@ -127,7 +117,6 @@ export default function Features() {
               <div className="mb-6 text-voxy-primary group-hover:scale-110 transition-transform duration-300">
                 <f.icon className="w-10 h-10" aria-hidden="true" />
               </div>
-
               <h3 className="text-xl font-semibold mb-2">{f.title}</h3>
               <p className="text-voxy-muted leading-relaxed">{f.desc}</p>
             </motion.article>
@@ -135,7 +124,7 @@ export default function Features() {
         </section>
       </main>
 
-      {/* === CTA SECTION === */}
+      {/* === CTA === */}
       <motion.section
         variants={fadeUp}
         initial="hidden"
@@ -147,13 +136,12 @@ export default function Features() {
           <h2 className="text-3xl md:text-4xl font-bold mb-4 text-white">
             Ready to Experience AI Interviews?
           </h2>
-
           <p className="text-voxy-highlight mb-6 text-lg">
             Try SwarAI and transform your hiring experience.
           </p>
-
           <a
             href="/auth/register"
+            aria-label="Register for SwarAI"
             className="inline-block bg-white text-voxy-primary font-semibold px-8 py-3 rounded-xl shadow-md hover:bg-gray-100 transition-all"
           >
             Get Started Free
@@ -162,7 +150,7 @@ export default function Features() {
       </motion.section>
 
       {/* === FOOTER === */}
-      <Suspense>
+      <Suspense fallback={<div className="h-32" />}>
         <Footer />
       </Suspense>
     </div>

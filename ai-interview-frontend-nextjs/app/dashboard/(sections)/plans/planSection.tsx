@@ -1,5 +1,6 @@
 "use client";
 
+import Pricing from "@/app/components/Pricing";
 import ProtectedRoute from "@/app/components/ProtectedRoute";
 import { motion } from "framer-motion";
 import { Crown, CheckCircle, Clock, Star } from "lucide-react";
@@ -105,80 +106,7 @@ export default function PlanSection() {
           </motion.button>
         </motion.div>
 
-        {/* ===== AVAILABLE PLANS ===== */}
-        <div className="grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-3 gap-8">
-          {plans.map((plan, index) => (
-            <motion.div
-              key={index}
-              whileHover={{ scale: 1.03 }}
-              transition={{ type: "spring", stiffness: 200, damping: 15 }}
-              className={`relative overflow-hidden rounded-2xl border border-voxy-border bg-voxy-surface/70 backdrop-blur-md shadow-lg transition ${
-                plan.name === currentPlan ? "ring-2 ring-voxy-primary" : ""
-              }`}
-            >
-              {/* Gradient Accent */}
-              <div
-                className={`absolute inset-0 bg-gradient-to-br ${plan.gradient} opacity-10`}
-              />
-
-              <div className="relative p-8 text-center">
-                {/* Header */}
-                <div className="flex flex-col items-center mb-4">
-                  <h3 className="text-xl font-bold text-voxy-text">
-                    {plan.name}
-                  </h3>
-                  <p className="text-voxy-muted text-sm mt-1">
-                    {plan.description}
-                  </p>
-                </div>
-
-                {/* Price */}
-                <p className="text-3xl font-bold mb-6 text-voxy-text">
-                  {plan.price}
-                </p>
-
-                {/* Features */}
-                <ul className="space-y-2 text-sm text-voxy-muted mb-8 text-left">
-                  {plan.features.map((feature, i) => (
-                    <li key={i} className="flex items-start gap-2">
-                      <CheckCircle
-                        size={16}
-                        className="text-voxy-primary mt-0.5"
-                      />
-                      {feature}
-                    </li>
-                  ))}
-                </ul>
-
-                {/* Buttons */}
-                {plan.name === currentPlan ? (
-                  <motion.button
-                    disabled
-                    className="w-full py-3 rounded-lg font-semibold text-voxy-muted bg-voxy-border cursor-not-allowed"
-                  >
-                    Current Plan
-                  </motion.button>
-                ) : (
-                  <motion.button
-                    whileHover={{ scale: 1.05 }}
-                    whileTap={{ scale: 0.97 }}
-                    onClick={() => setCurrentPlan(plan.name)}
-                    className={`w-full py-3 rounded-lg font-semibold text-voxy-text bg-gradient-to-r ${plan.gradient} shadow-md hover:opacity-90 transition`}
-                  >
-                    Upgrade to {plan.name}
-                  </motion.button>
-                )}
-              </div>
-
-              {/* Highlight Badge */}
-              {plan.name === "Premium" && (
-                <div className="absolute top-4 right-4 bg-voxy-accent/20 text-voxy-accent text-xs font-semibold px-3 py-1 rounded-full flex items-center gap-1">
-                  <Star size={12} /> Popular
-                </div>
-              )}
-            </motion.div>
-          ))}
-        </div>
+        <Pricing/>
       </motion.div>
     </ProtectedRoute>
   );

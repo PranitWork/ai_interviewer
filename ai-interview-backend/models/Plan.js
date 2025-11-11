@@ -3,7 +3,7 @@ import mongoose from "mongoose";
 const planSchema = new mongoose.Schema({
   name: {
     type: String,
-    enum: ["free", "pro", "enterprise"],
+    enum: ["free", "pro", "advance"],
     unique: true,
     required: true,
   },

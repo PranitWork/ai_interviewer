@@ -2,15 +2,17 @@
 
 import dynamic from "next/dynamic";
 import { motion } from "framer-motion";
-import { CheckCircle, Star } from "lucide-react";
-import { useMemo } from "react";
 import { toast } from "react-toastify";
+import { useEffect, useMemo } from "react";
+import { useDispatch } from "react-redux";
+import { AppDispatch } from "@/app/Store/Store";
+import { asynccheckout } from "@/app/Store/actions/checkoutActions";
+import { openRazorpayCheckout } from "@/app/lib/razorpayClient";
+import Pricing from "@/app/components/Pricing";
 
-// ✅ Lazy-load layout components
-const Header = dynamic(() => import("@/app/components/Header"));
-const Footer = dynamic(() => import("@/app/components/Footer"));
+const Header = dynamic(() => import("@/app/components/Header"), { ssr: false });
+const Footer = dynamic(() => import("@/app/components/Footer"), { ssr: false });
 
-// ✅ Shared motion variant
 const fadeUp = {
   hidden: { opacity: 0, y: 30 },
   visible: (delay = 0) => ({
@@ -20,54 +22,17 @@ const fadeUp = {
   }),
 };
 
-export default function Pricing() {
-  // ✅ Plans (memoized for performance)
-  const plans = useMemo(
-    () => [
-      {
-        name: "Free",
-        price: "$0",
-        subtitle: "Perfect for individuals exploring AI interviews.",
-        features: [
-          "Up to 5 interviews/month",
-          "Basic AI feedback",
-          "Limited analytics",
-          "Email support",
-        ],
-        button: "Get Started",
-        highlight: false,
-      },
-      {
-        name: "Pro",
-        price: "$29/mo",
-        subtitle: "Ideal for recruiters and growing teams.",
-        features: [
-          "Unlimited interviews",
-          "Advanced analytics",
-          "Custom feedback templates",
-          "Priority support",
-        ],
-        button: "Upgrade to Pro",
-        highlight: true,
-      },
-      {
-        name: "Enterprise",
-        price: "Custom",
-        subtitle: "For large organizations that need scalability.",
-        features: [
-          "Unlimited everything",
-          "Dedicated AI model tuning",
-          "Admin dashboard",
-          "Dedicated success manager",
-        ],
-        button: "Contact Sales",
-        highlight: false,
-      },
-    ],
-    []
-  );
+export default function PricingPage() {
+  const dispatch = useDispatch<AppDispatch>();
 
-  // ✅ FAQs (memoized)
+  // Load Razorpay script dynamically
+  useEffect(() => {
+    const script = document.createElement("script");
+    script.src = "https://checkout.razorpay.com/v1/checkout.js";
+    script.async = true;
+    document.body.appendChild(script);
+  }, []);
+
   const faqs = useMemo(
     () => [
       {
@@ -86,15 +51,30 @@ export default function Pricing() {
     []
   );
 
-  // ⚙️ Razorpay integration ready (demo)
   const handlePayment = async (plan: string) => {
-    if (plan === "Pro") {
-      toast.info("Redirecting to Razorpay checkout… (Demo)");
-      // TODO: integrate Razorpay/Stripe API here
-    } else if (plan === "Enterprise") {
-      toast.info("Our sales team will contact you shortly!");
-    } else {
-      toast.success("You're on the Free plan — start using SwarAI now!");
+    if (plan === "Free") {
+      toast.success("🎉 You’re on the Free plan — start exploring now!");
+      return;
+    }
+
+    if (plan === "Enterprise") {
+      toast.info("💬 Our sales team will contact you shortly!");
+      return;
+    }
+
+    try {
+      toast.info("⚡ Creating checkout session...");
+      const result = await dispatch(asynccheckout({ plan }));
+
+      if (result.success) {
+        toast.success("✅ Redirecting to Razorpay checkout...");
+        await openRazorpayCheckout(plan);
+      } else {
+        toast.error("❌ Failed to create payment session.");
+      }
+    } catch (err) {
+      console.error("Checkout error:", err);
+      toast.error("Payment process failed. Try again.");
     }
   };
 
@@ -102,7 +82,7 @@ export default function Pricing() {
     <main className="min-h-screen bg-gradient-to-b from-voxy-bg via-voxy-surface to-voxy-bg text-voxy-text font-sans overflow-hidden">
       <Header />
 
-      {/* === HEADING === */}
+      {/* Heading */}
       <section className="text-center py-28 px-6">
         <motion.div
           variants={fadeUp}
@@ -115,81 +95,14 @@ export default function Pricing() {
           </h1>
           <p className="text-voxy-muted text-lg max-w-2xl mx-auto">
             Choose the perfect plan for your AI interview experience.
-            Scale effortlessly with intelligent insights.
           </p>
         </motion.div>
       </section>
 
-      {/* === PRICING CARDS === */}
-      <section
-        aria-label="Pricing Plans"
-        className="grid md:grid-cols-3 gap-10 max-w-6xl mx-auto px-6"
-      >
-        {plans.map((plan, i) => (
-          <motion.article
-            key={plan.name}
-            variants={fadeUp}
-            initial="hidden"
-            whileInView="visible"
-            viewport={{ once: true, margin: "-50px" }}
-            custom={i * 0.2}
-            className={`relative p-8 rounded-2xl border shadow-lg transition-all transform-gpu hover:scale-105 ${
-              plan.highlight
-                ? "bg-gradient-to-b from-voxy-primary to-voxy-secondary border-voxy-primary text-white shadow-voxy-primary/40"
-                : "bg-voxy-surface/60 border-voxy-border hover:border-voxy-primary hover:shadow-voxy-primary/20"
-            }`}
-          >
-            {/* Highlight Badge */}
-            {plan.highlight && (
-              <div className="absolute -top-4 left-1/2 -translate-x-1/2 bg-yellow-400 text-black font-semibold text-xs px-4 py-1 rounded-full flex items-center gap-1 shadow-md">
-                <Star className="w-4 h-4" />
-                Most Popular
-              </div>
-            )}
+      {/* Pricing Cards */}
+      <Pricing onSelectPlan={handlePayment} />
 
-            <h3 className="text-2xl font-semibold mb-2">{plan.name}</h3>
-            <p
-              className={`mb-6 ${
-                plan.highlight ? "text-white/90" : "text-voxy-muted"
-              }`}
-            >
-              {plan.subtitle}
-            </p>
-            <p className="text-5xl font-extrabold mb-6">{plan.price}</p>
-
-            {/* Features */}
-            <ul className="space-y-3 text-left">
-              {plan.features.map((feature, idx) => (
-                <li key={idx} className="flex items-center gap-2">
-                  <CheckCircle
-                    className={`w-5 h-5 ${
-                      plan.highlight ? "text-white" : "text-voxy-primary"
-                    }`}
-                  />
-                  <span>{feature}</span>
-                </li>
-              ))}
-            </ul>
-
-            {/* Action Button */}
-            <motion.button
-              whileHover={{ scale: 1.05 }}
-              whileTap={{ scale: 0.97 }}
-              onClick={() => handlePayment(plan.name)}
-              aria-label={`Select ${plan.name} plan`}
-              className={`w-full mt-10 py-3 rounded-lg font-semibold transition shadow-md ${
-                plan.highlight
-                  ? "bg-white text-voxy-primary hover:bg-gray-100"
-                  : "bg-voxy-primary hover:bg-voxy-secondary text-white"
-              }`}
-            >
-              {plan.button}
-            </motion.button>
-          </motion.article>
-        ))}
-      </section>
-
-      {/* === FAQ SECTION === */}
+      {/* FAQ Section */}
       <section className="max-w-4xl mx-auto mt-32 px-6">
         <motion.h2
           variants={fadeUp}
@@ -219,7 +132,7 @@ export default function Pricing() {
         </div>
       </section>
 
-      {/* === CTA SECTION === */}
+      {/* CTA Section */}
       <section className="mt-32 text-center px-6 mb-24">
         <motion.div
           variants={fadeUp}
@@ -232,7 +145,8 @@ export default function Pricing() {
             Ready to Power Your Interviews?
           </h2>
           <p className="text-white/80 mb-8 text-lg">
-            Start your free plan today and experience AI-powered interview intelligence.
+            Start your free plan today and experience AI-powered interview
+            intelligence.
           </p>
           <motion.button
             whileHover={{ scale: 1.05 }}

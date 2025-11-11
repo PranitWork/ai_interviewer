@@ -4,6 +4,7 @@ import  interviewSlice  from "./reducers/interviewSlice";
 import  feedbackSlice  from "./reducers/feedbackSlice";
 import userProfileSlice from "./reducers/userSlice"
 import analyticsSlice from "./reducers/analyticsSlice"
+import userCheckoutSlice from "./reducers/checkoutSlice"
 
 export const store = configureStore({
   reducer: {
@@ -11,7 +12,8 @@ export const store = configureStore({
     interviewReducer: interviewSlice,
     feedbackReducer: feedbackSlice,
     userReducer: userProfileSlice,
-    analyticsReducer : analyticsSlice
+    analyticsReducer : analyticsSlice,
+    userCheckoutReducer: userCheckoutSlice
   },
 });
 
