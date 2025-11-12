@@ -5,12 +5,13 @@ import { Brain, Sparkles, Mic, Bot } from "lucide-react";
 import dynamic from "next/dynamic";
 import { useMemo } from "react";
 import Link from "next/link";
+
 // ✅ Lazy-load heavy components for faster initial page render
 const Header = dynamic(() => import("./components/Header"));
 const Footer = dynamic(() => import("./components/Footer"));
 const Pricing = dynamic(() => import("./components/Pricing"));
 
-// === Motion Variants for consistency ===
+// === Motion Variants ===
 const fadeUp = {
   hidden: { opacity: 0, y: 30 },
   visible: (delay = 0) => ({
@@ -82,7 +83,7 @@ export default function Home() {
           custom={0.4}
           className="text-voxy-muted text-lg md:text-xl mt-6 max-w-2xl"
         >
-          Voxy AI transforms interviews using real-time analytics, speech
+          SwarAI transforms interviews using real-time analytics, speech
           insights, and intelligent feedback — helping candidates and recruiters
           connect meaningfully and make smarter hiring decisions.
         </motion.p>
@@ -94,15 +95,43 @@ export default function Home() {
           custom={0.6}
           className="mt-10 flex space-x-4"
         >
-          <Link href="/auth/register" className="px-6 py-3 rounded-lg font-semibold bg-gradient-to-r from-voxy-primary to-voxy-secondary text-voxy-text shadow-md hover:opacity-90 transition-all">
+          <Link
+            href="/auth/register"
+            className="px-6 py-3 rounded-lg font-semibold bg-gradient-to-r from-voxy-primary to-voxy-secondary text-voxy-text shadow-md hover:opacity-90 transition-all"
+          >
             Try For Free
           </Link>
-          <Link href="/features" className="px-6 py-3 border border-voxy-border hover:bg-voxy-surface/50 rounded-lg font-semibold text-voxy-text transition-all">
+          <Link
+            href="/features"
+            className="px-6 py-3 border border-voxy-border hover:bg-voxy-surface/50 rounded-lg font-semibold text-voxy-text transition-all"
+          >
             Learn More
           </Link>
         </motion.div>
       </section>
+      {/* 🖼️ DASHBOARD PREVIEW SECTION */}
+      <section
+        id="dashboard-preview"
+        className="mt-32 px-8 max-w-6xl mx-auto text-center"
+      >
+    
 
+        <motion.div
+          variants={fadeUp}
+          initial="hidden"
+          whileInView="visible"
+          custom={0.5}
+          viewport={{ once: true }}
+          className="rounded-2xl overflow-hidden shadow-2xl border border-voxy-border hover:shadow-voxy-primary/20 transition-all duration-500"
+        >
+          <motion.img
+            src="/dashboard-dark.png"
+            alt="SwarAI Dashboard Preview"
+            className="w-full cursor-crosshair  h-auto object-cover hover:scale-[1.02] transition-transform duration-700"
+            whileHover={{ scale: 1.02 }}
+          />
+        </motion.div>
+      </section>
       {/* 💡 FEATURES SECTION */}
       <section
         id="features"
@@ -139,7 +168,7 @@ export default function Home() {
           viewport={{ once: true }}
           className="text-3xl md:text-4xl font-bold mb-6 text-voxy-text"
         >
-          How Voxy AI Works
+          How SwarAI Works
         </motion.h2>
 
         <motion.p
@@ -151,11 +180,13 @@ export default function Home() {
           className="text-voxy-muted text-lg leading-relaxed"
         >
           Upload your candidate recordings, conduct live AI-assisted interviews,
-          and receive in-depth analytics and performance feedback. Voxy AI uses
+          and receive in-depth analytics and performance feedback. SwarAI uses
           natural language processing, sentiment tracking, and real-time scoring
           to help recruiters identify the perfect fit.
         </motion.p>
       </section>
+
+
 
       {/* 💰 PRICING SECTION */}
       <Pricing />

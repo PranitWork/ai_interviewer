@@ -42,8 +42,7 @@ export default function Contact() {
 
   const contactInfo = useMemo(
     () => [
-      { icon: <Mail size={22} />, text: "pranitworkspace@gmail.com" },
-      { icon: <Phone size={22} />, text: "+91 9875 205712" },
+      { icon: <Mail size={22} />, text: "hello.swarai@gmail.com" },
       { icon: <MapPin size={22} />, text: "New Sangvi, Krishna Chowk, Pune,maharashtra, india" },
     ],
     []
