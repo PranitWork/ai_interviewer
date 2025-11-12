@@ -34,22 +34,28 @@ export const generateFeedbackReport = async (req, res) => {
     console.log("interview role",interviewRole)
     // 3️⃣ Build AI prompt
     const prompt = `
-    You are an expert AI interviewer. Generate a detailed, **structured JSON feedback report** 
-    for the interview answers below.
+    You are a highly skilled AI interviewer and career mentor with deep expertise in assessing both technical and behavioral performance.
 
-    Role: ${interviewRole}
-    Answers: ${JSON.stringify(interview.answers)}
+Generate a comprehensive and empathetic **JSON-formatted interview feedback report** based on the candidate’s answers below.
 
-    Follow this exact JSON format (no extra text):
-    {
-      "role": string,
-      "technicalScore": number (1-10),
-      "communication": string,
-      "confidence": string,
-      "strengths": [string],
-      "weaknesses": [string],
-      "summary": string
-    }
+Context:
+- Role: ${interviewRole}
+- Answers: ${JSON.stringify(interview.answers)}
+
+Your feedback must reflect **professional evaluation standards**, with a tone that feels **encouraging, insightful, and constructive** — helping the user learn and grow.
+
+Follow this exact JSON format (return only valid JSON, no extra text):
+
+{
+  "role": string,
+  "technicalScore": number (1-10),
+  "communication": string, // concise assessment of clarity, articulation, and coherence
+  "confidence": string, // describe overall confidence and delivery style
+  "strengths": [string], // highlight specific strong points
+  "weaknesses": [string], // point out key improvement areas constructively
+  "summary": string // a motivational summary with actionable feedback and next steps
+}
+
     `;
 
     // 4️⃣ Generate feedback from OpenAI

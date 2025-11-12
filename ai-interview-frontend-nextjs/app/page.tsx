@@ -176,7 +176,7 @@ export default function Home() {
             Start your free trial today and experience the power of AI-driven
             interview intelligence.
           </p>
-          <button className="px-8 py-4 rounded-xl font-semibold bg-voxy-surface text-voxy-primary hover:bg-voxy-border transition-all shadow-md">
+          <button className="px-8 py-4 rounded-xl font-semibold bg-voxy-surface text-voxy-text hover:bg-voxy-border transition-all shadow-md">
             Start Free Trial
           </button>
         </motion.div>

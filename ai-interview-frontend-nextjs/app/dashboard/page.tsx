@@ -18,6 +18,7 @@ import dynamic from "next/dynamic";
 import clsx from "clsx";
 import ProtectedRoute from "../components/ProtectedRoute";
 import { useSelector } from "react-redux";
+import Link from "next/link";
 
 /* ===========================
     DYNAMIC IMPORTS (Lazy load)
@@ -48,7 +49,7 @@ const navItems = [
 export default function Dashboard() {
   const [active, setActive] = useState("Analytics");
   const [isOpen, setIsOpen] = useState(false);
-  const userProfile = useSelector((state: any) => state.userReducer.userProfile);
+  const userProfile = useSelector((state: any) => state.authReducer.user);
 
   /* === Avatar Generation - Client Only === */
   const [avatarUrl, setAvatarUrl] = useState<string | null>(null);
@@ -75,9 +76,11 @@ export default function Dashboard() {
         >
           {/* Logo */}
           <div className="text-center py-8 border-b border-voxy-border">
+              <Link className="text-voxy-text" href="/">
             <h1 className="text-2xl font-extrabold tracking-tight">
               Swar<span className="text-voxy-primary">AI</span>
             </h1>
+              </Link>
             <p className="text-xs text-voxy-muted mt-1">Intelligent Insights</p>
           </div>
 

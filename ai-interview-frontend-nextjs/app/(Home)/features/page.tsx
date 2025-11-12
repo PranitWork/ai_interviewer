@@ -136,7 +136,7 @@ export default function Features() {
           <h2 className="text-3xl md:text-4xl font-bold mb-4 text-white">
             Ready to Experience AI Interviews?
           </h2>
-          <p className="text-voxy-highlight mb-6 text-lg">
+          <p className="text-voxy-mute mb-6 text-lg">
             Try SwarAI and transform your hiring experience.
           </p>
           <a

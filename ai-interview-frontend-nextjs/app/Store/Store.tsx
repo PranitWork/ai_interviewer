@@ -5,6 +5,7 @@ import  feedbackSlice  from "./reducers/feedbackSlice";
 import userProfileSlice from "./reducers/userSlice"
 import analyticsSlice from "./reducers/analyticsSlice"
 import userCheckoutSlice from "./reducers/checkoutSlice"
+import contactSlice from "./reducers/contactSlice"
 
 export const store = configureStore({
   reducer: {
@@ -13,7 +14,8 @@ export const store = configureStore({
     feedbackReducer: feedbackSlice,
     userReducer: userProfileSlice,
     analyticsReducer : analyticsSlice,
-    userCheckoutReducer: userCheckoutSlice
+    userCheckoutReducer: userCheckoutSlice,
+    contactReducer:contactSlice, 
   },
 });
 

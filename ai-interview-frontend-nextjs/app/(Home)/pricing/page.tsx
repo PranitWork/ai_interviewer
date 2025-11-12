@@ -35,18 +35,26 @@ export default function PricingPage() {
 
   const faqs = useMemo(
     () => [
-      {
-        q: "Can I change my plan later?",
-        a: "Absolutely! You can upgrade or downgrade anytime from your dashboard.",
-      },
-      {
-        q: "Is there a free trial?",
-        a: "Yes, the free plan lets you experience core features before upgrading.",
-      },
-      {
-        q: "Do you offer enterprise support?",
-        a: "Yes! Enterprise clients get dedicated onboarding, AI customization, and 24/7 support.",
-      },
+        {
+    q: "What is swarAI?",
+    a: "swarAI is an AI-powered interview preparation platform that simulates real interview sessions using voice and text. It gives you instant feedback on your answers, communication style, and overall performance to help you improve faster.",
+  },
+  {
+    q: "How does the AI interviewer work?",
+    a: "Once you start a session, the AI asks job-specific questions and listens to your answers. After each response, it instantly evaluates your answer for clarity, correctness, and confidence, then provides constructive feedback.",
+  },
+  {
+    q: "What’s the difference between the Free, Pro, and Advance plans?",
+    a: "The Free plan lets you try up to 3 interviews per month with basic feedback. The Pro plan offers unlimited interviews, detailed feedback, and analytics. The Advance plan adds personalized coaching, voice tone analysis, and performance tracking.",
+  },
+  {
+    q: "Can I view my previous interview reports?",
+    a: "Yes! All your interview summaries and detailed reports are saved in the Report section, where you can review your past sessions and track your improvement over time.",
+  },
+  {
+    q: "Is my voice and data safe with swarAI?",
+    a: "Absolutely. swarAI securely handles all your data and recordings using encrypted storage. Your sessions are private and never shared with third parties.",
+  },
     ],
     []
   );
@@ -103,16 +111,16 @@ export default function PricingPage() {
       <Pricing onSelectPlan={handlePayment} />
 
       {/* FAQ Section */}
-      <section className="max-w-4xl mx-auto mt-32 px-6">
         <motion.h2
           variants={fadeUp}
           initial="hidden"
           whileInView="visible"
           viewport={{ once: true }}
-          className="text-3xl font-bold text-center mb-10"
+          className="text-3xl font-bold text-center mt-32"
         >
           Frequently Asked <span className="text-voxy-primary">Questions</span>
         </motion.h2>
+      <section className="max-w-4xl max-h-[80vh] overflow-y-auto scroll-auto mx-auto mt-10 px-6">
 
         <div className="space-y-6">
           {faqs.map((faq, i) => (

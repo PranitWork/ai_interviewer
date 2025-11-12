@@ -20,14 +20,27 @@ export const startInterview = async (req, res) => {
 
   try {
     const prompt = `
-You are an interviewer for the role of ${role}. also Job Description ${details}
-Generate exactly 5 technical and 2 behavioral questions.
-Return ONLY a pure JSON array in this format:
+You are an experienced AI interviewer trained to assess candidates for the role of ${role}. 
+Use the following job description as context: ${details}.
+
+Your goal is to generate realistic, challenging, and well-balanced interview questions that reflect real-world expectations for this position. 
+Focus on technical depth, problem-solving, and behavioral evaluation relevant to the provided role and job description.
+
+Generate exactly **7 questions**:
+- **5 Technical** questions related to the required skills, tools, frameworks, or problem-solving relevant to the role.
+- **2 Behavioral** questions focused on communication, adaptability, leadership, teamwork, and conflict resolution.
+
+Output must be a **pure JSON array** in this exact format:
 [
-  {"question": "What is Node.js?", "category": "Technical"},
-  {"question": "Describe a challenge you faced.", "category": "Behavioral"}
+  {"question": "Explain how you would optimize system performance under heavy load.", "category": "Technical"},
+  {"question": "Tell me about a time when you had to resolve a team conflict.", "category": "Behavioral"}
 ]
-Do NOT include markdown, code fences, or extra text.`;
+
+Guidelines:
+- Do NOT include markdown, code blocks, or extra commentary.
+- Keep questions concise, professional, and realistic.
+- Ensure the questions align naturally with the ${role} and ${details}.
+`;
 
     const completion = await openai.chat.completions.create({
       model: "gpt-4o-mini",
@@ -76,7 +89,10 @@ export const evaluateAnswer = async (req, res) => {
 
   try {
     const prompt = `
-Evaluate this answer for correctness, depth, and clarity.
+You are an expert interviewer and professional evaluator trained to assess candidate responses across all job roles and domains.
+
+Evaluate the following answer for **accuracy, depth, clarity, and relevance** to the question context. 
+Consider whether the response demonstrates understanding, structured thinking, and appropriate use of examples.
 
 Question: ${question}
 Answer: ${answer}
@@ -84,10 +100,16 @@ Answer: ${answer}
 Return ONLY valid JSON in this format:
 {
   "score": number (1–10),
-  "comment": "Short evaluation",
-  "suggestions": "How to improve"
+  "comment": "Brief, professional evaluation summary highlighting strengths and weaknesses.",
+  "suggestions": "Constructive feedback on how the candidate could improve the answer, such as adding more detail, examples, or clarity."
 }
-Do NOT include markdown, code fences, or any text.`;
+
+Guidelines:
+- Be fair and objective.
+- Score 1–10, where 10 = exceptional, 5 = average, and 1 = poor.
+- Do NOT include markdown, code fences, or extra text.
+- Keep comments natural, professional, and globally understandable.
+`;
 
     const completion = await openai.chat.completions.create({
       model: "gpt-4o-mini",

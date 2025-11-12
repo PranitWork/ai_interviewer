@@ -1,43 +1,98 @@
+import crypto from "crypto";
 import User from "../models/User.js";
+import Otp from "../models/Otp.js";
 import jwt from "jsonwebtoken";
 import bcrypt from "bcryptjs";
-import crypto from "crypto";
 import sendEmail from "../utils/email.js";
 
 const generateToken = (id) =>
   jwt.sign({ id }, process.env.JWT_SECRET, { expiresIn: "7d" });
 
-// ✅ Register
-export const registerUser = async (req, res) => {
+
+// 📤 STEP 1: SEND OTP
+export const sendOtp = async (req, res) => {
   try {
-    const { name, email, password } = req.body;
+    const { email } = req.body;
     const normalizedEmail = email.toLowerCase();
 
     const existingUser = await User.findOne({ email: normalizedEmail });
     if (existingUser)
       return res.status(400).json({ success: false, message: "User already exists" });
 
+    // Generate 6-digit OTP
+    const otp = Math.floor(100000 + Math.random() * 900000).toString();
+
+    // Store OTP
+    await Otp.findOneAndUpdate(
+      { email: normalizedEmail },
+      { otp, createdAt: Date.now() },
+      { upsert: true, new: true }
+    );
+
+    // Send OTP via email
+    await sendEmail({
+      email: normalizedEmail,
+      subject: "Your OTP for Registration",
+      message: `
+        <div style="font-family: Arial, sans-serif;">
+          <h2>🔐 Email Verification</h2>
+          <p>Your OTP code is:</p>
+          <h1 style="color:#007bff;">${otp}</h1>
+          <p>This code is valid for 5 minutes.</p>
+        </div>
+      `,
+    });
+
+    res.status(200).json({ success: true, message: "OTP sent successfully" });
+  } catch (err) {
+    console.error("Error in sendOtp:", err);
+    res.status(500).json({ success: false, message: "Failed to send OTP" });
+  }
+};
+
+
+// ✅ STEP 2: VERIFY OTP AND REGISTER
+export const verifyAndRegister = async (req, res) => {
+  try {
+    const { name, email, password, otp } = req.body;
+    const normalizedEmail = email.toLowerCase();
+
+    const otpDoc = await Otp.findOne({ email: normalizedEmail });
+
+    if (!otpDoc)
+      return res.status(400).json({ success: false, message: "OTP not found or expired" });
+
+    if (otpDoc.otp !== otp)
+      return res.status(400).json({ success: false, message: "Invalid OTP" });
+
+    // ✅ OTP is valid — create user
     const hashedPassword = await bcrypt.hash(password, 10);
     const user = await User.create({
       name,
       email: normalizedEmail,
       password: hashedPassword,
-      role:"user",
+      role: "user",
     });
 
-    res.cookie("token", generateToken(user._id), {
+    // Delete OTP after success
+    await Otp.deleteOne({ email: normalizedEmail });
+
+    // Generate JWT Token
+    const token = generateToken(user._id);
+
+    res.cookie("token", token, {
       httpOnly: true,
       secure: true,
       sameSite: "None",
-  
     });
 
     res.status(201).json({
       success: true,
+      message: "User registered successfully",
       user: { _id: user._id, name: user.name, email: user.email },
     });
   } catch (err) {
-    console.error(err);
+    console.error("Error in verifyAndRegister:", err);
     res.status(500).json({ success: false, message: "Server error" });
   }
 };

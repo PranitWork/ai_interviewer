@@ -9,6 +9,7 @@ import { usePathname } from "next/navigation";
 export default function Header() {
   const [isOpen, setIsOpen] = useState(false);
   const [darkMode, setDarkMode] = useState(true);
+  const [scrolled, setScrolled] = useState(false);
   const pathname = usePathname();
 
   const navItems = [
@@ -18,11 +19,23 @@ export default function Header() {
     { name: "Contact", href: "/contact" },
   ];
 
+  // ✅ Scroll effect for sticky behavior
+  useEffect(() => {
+    const handleScroll = () => {
+      if (window.scrollY > 10) setScrolled(true);
+      else setScrolled(false);
+    };
+    window.addEventListener("scroll", handleScroll);
+    return () => window.removeEventListener("scroll", handleScroll);
+  }, []);
+
   // ✅ Load theme from localStorage or system
   useEffect(() => {
-    const stored = typeof window !== "undefined" ? localStorage.getItem("theme") : null;
+    const stored =
+      typeof window !== "undefined" ? localStorage.getItem("theme") : null;
     const prefersDark =
-      typeof window !== "undefined" && window.matchMedia?.("(prefers-color-scheme: dark)").matches;
+      typeof window !== "undefined" &&
+      window.matchMedia?.("(prefers-color-scheme: dark)").matches;
 
     if (stored === "light") {
       setDarkMode(false);
@@ -80,8 +93,14 @@ export default function Header() {
   }, [isOpen]);
 
   return (
-    <header className="sticky top-0 z-50 bg-voxy-surface/80 backdrop-blur-lg border-b border-voxy-border">
-      <nav className="max-w-7xl mx-auto flex items-center justify-between px-6 py-4">
+    <header
+      className={`fixed top-0 left-0 w-full z-50 transition-all duration-300 ${
+        scrolled
+          ? "bg-voxy-surface/90 backdrop-blur-lg border-b border-voxy-border shadow-md py-3"
+          : "bg-voxy-surface/70 backdrop-blur-sm border-b border-transparent py-4"
+      }`}
+    >
+      <nav className="max-w-7xl mx-auto flex items-center justify-between px-6 transition-all duration-300">
         {/* Logo */}
         <motion.h1
           initial={{ opacity: 0, y: -10 }}
@@ -133,7 +152,7 @@ export default function Header() {
         {/* Mobile Menu Button */}
         <button
           onClick={() => setIsOpen((v) => !v)}
-          className="md:hidden text-white focus:outline-none"
+          className="md:hidden text-voxy-text focus:outline-none"
           aria-expanded={isOpen}
           aria-label={isOpen ? "Close menu" : "Open menu"}
         >
@@ -152,7 +171,11 @@ export default function Header() {
             className="md:hidden bg-voxy-surface border-t border-voxy-border px-6 py-4 space-y-4"
           >
             {navItems.map((item, i) => (
-              <motion.div key={i} whileHover={{ scale: 1.02 }} onClick={() => setIsOpen(false)}>
+              <motion.div
+                key={i}
+                whileHover={{ scale: 1.02 }}
+                onClick={() => setIsOpen(false)}
+              >
                 <Link
                   href={item.href}
                   className="block text-voxy-muted hover:text-voxy-primary text-lg font-medium"

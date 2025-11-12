@@ -24,26 +24,49 @@ export const asyncCurrentUser = () => async (dispatch: AppDispatch) => {
   }
 };
 
-export const asyncRegisterUser = (data:any) => async (dispatch:AppDispatch)=>{
-    try{
-        const res = await axios.post("/auth/register",data,{
-            withCredentials:true,
-        });
-        console.log("Register Response:", res);
-        if(res.data?.user){
-            await dispatch(authUser(res.data.user));
-            return {success: true, message: res.data.message || "Registration successful"};
-        }else{
-            return {success: false, message: res.data?.message || "Registration failed"};
-        }
-    }catch(err:any){
-        const backendMsg = err.response?.data?.message ||
-        err.response?.data?.msg ||
-        err.message ||
-        "Something went wrong!";
-    return { success: false, message: backendMsg };
+export const asyncSendOtp = (data: any) => async (dispatch: AppDispatch) => {
+  try {
+    const res = await axios.post("/auth/send-otp", data, {
+      withCredentials: true,
+    });
+
+    if (res.data?.success) {
+      return { success: true, message: res.data.message };
+    } else {
+      return { success: false, message: res.data.message || "Failed to send OTP" };
     }
-}
+  } catch (err: any) {
+    const msg =
+      err.response?.data?.message ||
+      err.response?.data?.msg ||
+      err.message ||
+      "Something went wrong!";
+    return { success: false, message: msg };
+  }
+};
+
+// 🔹 STEP 2: Verify OTP + Register
+export const asyncVerifyRegister = (data: any) => async (dispatch: AppDispatch) => {
+  try {
+    const res = await axios.post("/auth/register", data, {
+      withCredentials: true,
+    });
+
+    if (res.data?.user) {
+      await dispatch(authUser(res.data.user));
+      return { success: true, message: res.data.message || "Registration successful" };
+    } else {
+      return { success: false, message: res.data?.message || "Invalid OTP" };
+    }
+  } catch (err: any) {
+    const msg =
+      err.response?.data?.message ||
+      err.response?.data?.msg ||
+      err.message ||
+      "Something went wrong!";
+    return { success: false, message: msg };
+  }
+};
 
 export const asyncLoginUser =(data:any)=>async (dispatch: AppDispatch)=>{
     try{

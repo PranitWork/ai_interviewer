@@ -14,41 +14,65 @@
   --color-voxy-highlight: #818cf8; /* soft accent */
 }
 
-/* ☀️ Light mode overrides (outside @theme) */
+/* ☀️ Light mode overrides (refined, professional palette) */
 html.light {
-  --color-voxy-bg: #f8f8fc;
-  --color-voxy-surface: #ffffff;
-  --color-voxy-text: #1a1a1a;
-  --color-voxy-muted: #555555;
-  --color-voxy-border: #e3e3e8;
-  --color-voxy-primary: #6366f1;
-  --color-voxy-secondary: #8b5cf6;
-  --color-voxy-accent: #a855f7;
-  --color-voxy-highlight: #6366f1;
+  --color-voxy-bg: #f7fafc;        /* very light neutral */
+  --color-voxy-surface: #ffffff;   /* card / surface */
+  --color-voxy-text: #0f172a;      /* slate-900 for high readability */
+  --color-voxy-muted: #475569;     /* subtle slate */
+  --color-voxy-border: #e6eef8;    /* soft border */
+  --color-voxy-primary: #2563eb;   /* blue-600 - reliable, professional */
+  --color-voxy-secondary: #7c3aed; /* violet-600 - accent */
+  --color-voxy-accent: #06b6d4;    /* cyan-500 - secondary accent */
+  --color-voxy-highlight: #60a5fa; /* softer highlight */
 }
 
 /* === Base styles === */
 @layer base {
   html {
-    @apply bg-voxy-bg text-voxy-text font-sans scroll-smooth transition-colors duration-300;
+    background-color: var(--color-voxy-bg);
+    color: var(--color-voxy-text);
+    font-family: ui-sans-serif, system-ui, -apple-system, "Segoe UI", Roboto,
+      "Helvetica Neue", Arial;
+    scroll-behavior: smooth;
+    transition: background-color 250ms ease, color 250ms ease;
   }
 
   a {
-    @apply text-voxy-primary hover:text-voxy-secondary transition;
+    color: var(--color-voxy-primary);
+    transition: color 150ms ease;
   }
 
   button {
-    @apply font-medium cursor-pointer;
+    font-weight: 600;
+    cursor: pointer;
   }
 
+  /* Utility aliases for Tailwind-friendly class names (optional) */
+  .bg-voxy-surface {
+    background-color: var(--color-voxy-surface);
+  }
+  .text-voxy-text {
+    color: var(--color-voxy-text);
+  }
+  .text-voxy-muted {
+    color: var(--color-voxy-muted);
+  }
+  .border-voxy-border {
+    border-color: var(--color-voxy-border);
+  }
+  .bg-voxy-primary {
+    background-color: var(--color-voxy-primary);
+  }
+  .bg-voxy-secondary {
+    background-color: var(--color-voxy-secondary);
+  }
 }
-
 
 /* === Scrollbar styling === */
 html {
   scrollbar-width: thin;
-  scrollbar-color: rgba(255, 255, 255, 0.15) transparent;
-  scroll-behavior: smooth;
+  scrollbar-color: rgba(0, 0, 0, 0.15) transparent;
 }
 
 ::-webkit-scrollbar {
@@ -58,8 +82,8 @@ html {
 ::-webkit-scrollbar-thumb {
   background: linear-gradient(
     180deg,
-    rgba(111, 114, 255, 0.4),
-    rgba(155, 107, 255, 0.3)
+    rgba(99, 102, 241, 0.35),
+    rgba(139, 92, 246, 0.25)
   );
   border-radius: 10px;
 }

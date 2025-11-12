@@ -456,7 +456,7 @@ export default function InterviewSection() {
                   />
                   <input
                     type="text"
-                    placeholder="MERN Full Stack Developer"
+                    placeholder="Enter Your Job Role"
                     value={role}
                     onChange={(e) => setRole(e.target.value)}
                     className="w-full pl-10 pr-3 py-3 bg-voxy-surface border border-voxy-border rounded-lg text-voxy-text"

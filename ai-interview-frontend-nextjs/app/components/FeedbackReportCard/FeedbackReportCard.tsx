@@ -53,7 +53,7 @@ export default function FeedbackReportCard() {
   }, [dispatch]);
 
   return (
-    <div className="space-y-10">
+    <div className="space-y-10 max-h-[100vh] overflow-auto scroll-auto">
       {/* ===== GRID ===== */}
       {loading ? (
         <div className="text-center text-gray-400">Loading feedbacks...</div>

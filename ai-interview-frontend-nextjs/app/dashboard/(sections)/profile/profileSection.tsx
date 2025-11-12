@@ -5,14 +5,14 @@ import { motion } from "framer-motion";
 import { User, Mail, Pencil, Save, X } from "lucide-react";
 import { useDispatch, useSelector } from "react-redux";
 import { AppDispatch, RootState } from "@/app/Store/Store";
-import { asyncgetUser, asyncUpdateUser } from "@/app/Store/actions/userActions";
+import {  asyncUpdateUser } from "@/app/Store/actions/userActions";
 import { toast } from "react-toastify";
 import ProtectedRoute from "@/app/components/ProtectedRoute";
 
 export default function ProfileSection() {
   const dispatch = useDispatch<AppDispatch>();
   const userProfile = useSelector(
-    (state: RootState) => state.userReducer.userProfile
+    (state: RootState) => state.authReducer.user
   );
 
   const [editMode, setEditMode] = useState(false);
@@ -24,9 +24,7 @@ export default function ProfileSection() {
   );
   const avatarUrl = `https://api.dicebear.com/9.x/adventurer/png?seed=${randomSeed}`;
 
-  useEffect(() => {
-    dispatch(asyncgetUser());
-  }, [dispatch]);
+
 
   useEffect(() => {
     if (userProfile) setName(userProfile?.name || "");

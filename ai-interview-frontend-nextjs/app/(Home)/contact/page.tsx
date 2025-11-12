@@ -4,13 +4,15 @@ import dynamic from "next/dynamic";
 import { motion } from "framer-motion";
 import { Mail, Phone, MapPin, CheckCircle2 } from "lucide-react";
 import { useMemo, useState } from "react";
+import { useForm } from "react-hook-form";
+import { useDispatch } from "react-redux";
 import { toast } from "react-toastify";
+import { AppDispatch } from "@/app/Store/Store";
+import { asyncContact } from "@/app/Store/actions/contactActions";
 
-// ✅ Lazy-load for performance
 const Header = dynamic(() => import("@/app/components/Header"));
 const Footer = dynamic(() => import("@/app/components/Footer"));
 
-// ✅ Shared Motion Variants
 const fadeUp = {
   hidden: { opacity: 0, y: 25 },
   visible: (delay = 0) => ({
@@ -20,25 +22,56 @@ const fadeUp = {
   }),
 };
 
+type ContactFormValues = {
+  name: string;
+  email: string;
+  message: string;
+};
+
 export default function Contact() {
+  const dispatch = useDispatch<AppDispatch>();
   const [sent, setSent] = useState(false);
 
-  // ✅ Memoized contact info
+  // ✅ React Hook Form setup
+  const {
+    register,
+    handleSubmit,
+    reset,
+    formState: { errors, isSubmitting },
+  } = useForm<ContactFormValues>();
+
   const contactInfo = useMemo(
     () => [
-      { icon: <Mail size={22} />, text: "support@SwarAI.com" },
-      { icon: <Phone size={22} />, text: "+91 98765 43210" },
-      { icon: <MapPin size={22} />, text: "New Sangvi, Krishna Chowk, Pune" },
+      { icon: <Mail size={22} />, text: "pranitworkspace@gmail.com" },
+      { icon: <Phone size={22} />, text: "+91 9875 205712" },
+      { icon: <MapPin size={22} />, text: "New Sangvi, Krishna Chowk, Pune,maharashtra, india" },
     ],
     []
   );
 
-  const handleSubmit = (e: React.FormEvent) => {
-    e.preventDefault();
-    setSent(true);
-    toast.success("✅ Message sent successfully!");
-    setTimeout(() => setSent(false), 4000);
-  };
+  // ✅ Submit Handler
+
+const onSubmit = async (data: ContactFormValues) => {
+  try {
+    const actionResult = await dispatch(asyncContact(data));
+    // Redux Thunk usually returns its result inside 'payload'
+    const result = (actionResult as any)?.payload || actionResult;
+
+    if (result?.success) {
+      console.log("Contact form result:", result);
+      toast.success(result.message || "✅ Message sent successfully!");
+      setSent(true);
+      reset();
+      setTimeout(() => setSent(false), 4000);
+    } else {
+      toast.error(result?.message || "❌ Failed to send message.");
+    }
+  } catch (err) {
+    console.error("Contact form error:", err);
+    toast.error("⚠️ Something went wrong. Please try again later.");
+  }
+};
+
 
   return (
     <main className="min-h-screen bg-gradient-to-b from-voxy-bg via-voxy-surface to-voxy-bg text-voxy-text font-sans overflow-hidden">
@@ -79,7 +112,7 @@ export default function Contact() {
           className="bg-voxy-surface/60 border border-voxy-border rounded-2xl p-8 shadow-lg hover:shadow-voxy-primary/20 transition-all backdrop-blur-md"
         >
           {!sent ? (
-            <form onSubmit={handleSubmit} className="space-y-5">
+            <form onSubmit={handleSubmit(onSubmit)} className="space-y-5">
               <div>
                 <label
                   htmlFor="name"
@@ -89,11 +122,18 @@ export default function Contact() {
                 </label>
                 <input
                   id="name"
-                  name="name"
-                  required
-                  className="w-full p-3 bg-voxy-bg border border-voxy-border rounded-lg text-voxy-text placeholder-voxy-muted focus:border-voxy-primary outline-none transition"
+                  {...register("name", {
+                    required: "Name is required",
+                    minLength: { value: 2, message: "Name too short" },
+                  })}
+                  className={`w-full p-3 bg-voxy-bg border ${
+                    errors.name ? "border-red-500" : "border-voxy-border"
+                  } rounded-lg text-voxy-text placeholder-voxy-muted focus:border-voxy-primary outline-none transition`}
                   placeholder="Your Name"
                 />
+                {errors.name && (
+                  <p className="text-red-500 text-sm mt-1">{errors.name.message}</p>
+                )}
               </div>
 
               <div>
@@ -106,11 +146,21 @@ export default function Contact() {
                 <input
                   id="email"
                   type="email"
-                  name="email"
-                  required
-                  className="w-full p-3 bg-voxy-bg border border-voxy-border rounded-lg text-voxy-text placeholder-voxy-muted focus:border-voxy-primary outline-none transition"
+                  {...register("email", {
+                    required: "Email is required",
+                    pattern: {
+                      value: /^[^\s@]+@[^\s@]+\.[^\s@]+$/,
+                      message: "Invalid email address",
+                    },
+                  })}
+                  className={`w-full p-3 bg-voxy-bg border ${
+                    errors.email ? "border-red-500" : "border-voxy-border"
+                  } rounded-lg text-voxy-text placeholder-voxy-muted focus:border-voxy-primary outline-none transition`}
                   placeholder="you@example.com"
                 />
+                {errors.email && (
+                  <p className="text-red-500 text-sm mt-1">{errors.email.message}</p>
+                )}
               </div>
 
               <div>
@@ -122,21 +172,31 @@ export default function Contact() {
                 </label>
                 <textarea
                   id="message"
-                  name="message"
                   rows={5}
-                  required
-                  className="w-full p-3 bg-voxy-bg border border-voxy-border rounded-lg text-voxy-text placeholder-voxy-muted focus:border-voxy-primary outline-none transition"
+                  {...register("message", {
+                    required: "Message is required",
+                    minLength: { value: 10, message: "Message too short" },
+                  })}
+                  className={`w-full p-3 bg-voxy-bg border ${
+                    errors.message ? "border-red-500" : "border-voxy-border"
+                  } rounded-lg text-voxy-text placeholder-voxy-muted focus:border-voxy-primary outline-none transition`}
                   placeholder="Your message..."
                 />
+                {errors.message && (
+                  <p className="text-red-500 text-sm mt-1">
+                    {errors.message.message}
+                  </p>
+                )}
               </div>
 
               <motion.button
                 whileHover={{ scale: 1.03 }}
                 whileTap={{ scale: 0.97 }}
                 type="submit"
-                className="w-full py-3 bg-gradient-to-r from-voxy-primary to-voxy-secondary rounded-lg font-semibold text-voxy-text hover:opacity-90 transition shadow-md hover:shadow-voxy-primary/30"
+                disabled={isSubmitting}
+                className="w-full py-3 bg-gradient-to-r from-voxy-primary to-voxy-secondary rounded-lg font-semibold text-voxy-text hover:opacity-90 transition shadow-md hover:shadow-voxy-primary/30 disabled:opacity-70"
               >
-                Send Message
+                {isSubmitting ? "Sending..." : "Send Message"}
               </motion.button>
             </form>
           ) : (

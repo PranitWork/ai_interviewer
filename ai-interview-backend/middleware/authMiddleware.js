@@ -6,7 +6,7 @@ export const protect = async (req, res, next) => {
     let token = req.cookies?.token || req.header("Authorization")?.replace("Bearer ", "");
 
     if (!token) {
-      return res.status(401).json({ message: "No token, authorization denied" });
+      return res.status(401).json({ message: "No token, authorization denied, please login first" });
     }
 
     const decoded = jwt.verify(token, process.env.JWT_SECRET);

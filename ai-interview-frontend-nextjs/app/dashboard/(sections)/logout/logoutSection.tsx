@@ -24,7 +24,7 @@ export default function LogoutSection() {
   const dispatch = useDispatch<AppDispatch>();
 
   // ✅ Grab userProfile from Redux
-  const userProfile = useSelector((state: any) => state.userReducer.userProfile);
+  const userProfile = useSelector((state: any) => state.authReducer.user);
   console.log(userProfile)
  const createdDate = new Date(userProfile?.createdAt).toLocaleString("en-IN", {
   day: "2-digit",

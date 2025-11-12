@@ -56,32 +56,4 @@ export const asyncEvaluateInterview =(interviewId: string, question: string, ans
     }
   };
 
-export const asyncGetInterviewDetails =(interviewId: string) => async (dispatch: AppDispatch) => {
-    try {
-      const response = await axios.get(`/interview/${interviewId}`, {
-        withCredentials: true,
-      });
-      if (response.data.success) {
-        dispatch(setInterview(response.data.data));
-      } else {
-        return { error: response.data.message };
-      }
-    } catch (error: any) {
-      return { error: error.message };
-    }
-  };
 
-export const asyncGetUserInterviews = () => async (dispatch: AppDispatch) => {
-  try {
-    const response = await axios.get("interview", {
-      withCredentials: true,
-    });
-    if (response.data.success) {
-      dispatch(setInterview(response.data.data));
-    } else {
-      return { error: response.data.message };
-    }
-  } catch (error: any) {
-    return { error: error.message };
-  }
-};
