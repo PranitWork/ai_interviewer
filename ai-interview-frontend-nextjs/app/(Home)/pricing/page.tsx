@@ -2,13 +2,11 @@
 
 import dynamic from "next/dynamic";
 import { motion } from "framer-motion";
-import { toast } from "react-toastify";
-import { useEffect, useMemo } from "react";
-import { useDispatch } from "react-redux";
-import { AppDispatch } from "@/app/Store/Store";
-import { asynccheckout } from "@/app/Store/actions/checkoutActions";
-import { openRazorpayCheckout } from "@/app/lib/razorpayClient";
+import {  useMemo } from "react";
+
 import Pricing from "@/app/components/Pricing";
+import { useRouter } from "next/navigation";
+
 
 const Header = dynamic(() => import("@/app/components/Header"), { ssr: false });
 const Footer = dynamic(() => import("@/app/components/Footer"), { ssr: false });
@@ -23,15 +21,7 @@ const fadeUp = {
 };
 
 export default function PricingPage() {
-  const dispatch = useDispatch<AppDispatch>();
 
-  // Load Razorpay script dynamically
-  useEffect(() => {
-    const script = document.createElement("script");
-    script.src = "https://checkout.razorpay.com/v1/checkout.js";
-    script.async = true;
-    document.body.appendChild(script);
-  }, []);
 
   const faqs = useMemo(
     () => [
@@ -58,33 +48,10 @@ export default function PricingPage() {
     ],
     []
   );
-
-  const handlePayment = async (plan: string) => {
-    if (plan === "Free") {
-      toast.success("🎉 You’re on the Free plan — start exploring now!");
-      return;
-    }
-
-    if (plan === "Enterprise") {
-      toast.info("💬 Our sales team will contact you shortly!");
-      return;
-    }
-
-    try {
-      toast.info("⚡ Creating checkout session...");
-      const result = await dispatch(asynccheckout({ plan }));
-
-      if (result.success) {
-        toast.success("✅ Redirecting to Razorpay checkout...");
-        await openRazorpayCheckout(plan);
-      } else {
-        toast.error("❌ Failed to create payment session.");
-      }
-    } catch (err) {
-      console.error("Checkout error:", err);
-      toast.error("Payment process failed. Try again.");
-    }
-  };
+const router = useRouter();
+const handleSelectPlan = async (plan: string) => {
+  router.push(`/checkout?plan=${plan}`);
+};
 
   return (
     <main className="min-h-screen bg-gradient-to-b from-voxy-bg via-voxy-surface to-voxy-bg text-voxy-text font-sans overflow-hidden">
@@ -108,7 +75,7 @@ export default function PricingPage() {
       </section>
 
       {/* Pricing Cards */}
-      <Pricing onSelectPlan={handlePayment} />
+      <Pricing onSelectPlan={handleSelectPlan} />
 
       {/* FAQ Section */}
         <motion.h2
@@ -159,7 +126,7 @@ export default function PricingPage() {
           <motion.button
             whileHover={{ scale: 1.05 }}
             whileTap={{ scale: 0.97 }}
-            onClick={() => handlePayment("Free")}
+            onClick={() => handleSelectPlan("Free")}
             className="px-8 py-4 bg-white text-voxy-primary font-semibold rounded-xl hover:bg-gray-100 transition-all"
           >
             Get Started for Free

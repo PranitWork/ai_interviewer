@@ -1,30 +1,41 @@
 import mongoose from "mongoose";
 import crypto from "crypto";
 
-const userSchema = new mongoose.Schema({
-  name: String,
-  email: { type: String, unique: true },
-  password: String,
-  role: { type: String, enum: ["user", "admin"], default: "user" },
-  plan: { type: String, enum: ["free", "pro", "advance"], default: "free" },
-  planExpiresAt: Date,
+const userSchema = new mongoose.Schema(
+  {
+    name: String,
+    email: { type: String, unique: true },
+    password: String,
+    role: { type: String, enum: ["user", "admin"], default: "user" },
 
-  subscriptionId: String,
-  usage: {
-    interviewsConducted: { type: Number, default: 0 },
-    answersEvaluated: { type: Number, default: 0 },
-    feedbacksGenerated: { type: Number, default: 0 },
+    // ✅ keep same as Plan.name & Subscription.plan
+    plan: {
+      type: String,
+      enum: ["free", "pro", "advance"],
+      default: "free",
+    },
+    planExpiresAt: Date,
+
+    subscriptionId: String,
+
+    usage: {
+      interviewsConducted: { type: Number, default: 0 },
+      answersEvaluated: { type: Number, default: 0 },
+      feedbacksGenerated: { type: Number, default: 0 },
+    },
+
+    resetPasswordToken: String,
+    resetPasswordExpire: Date,
   },
-
-  resetPasswordToken: String,
-  resetPasswordExpire: Date,
-}, { timestamps: true });
-
-
+  { timestamps: true }
+);
 
 userSchema.methods.getResetPasswordToken = function () {
   const resetToken = crypto.randomBytes(20).toString("hex");
-  this.resetPasswordToken = crypto.createHash("sha256").update(resetToken).digest("hex");
+  this.resetPasswordToken = crypto
+    .createHash("sha256")
+    .update(resetToken)
+    .digest("hex");
   this.resetPasswordExpire = Date.now() + 10 * 60 * 1000; // 10 mins
   return resetToken;
 };

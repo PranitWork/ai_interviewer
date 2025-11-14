@@ -35,7 +35,6 @@ export const sendContactMessage = async (req, res) => {
       message: "Message sent successfully!",
     });
   } catch (error) {
-    console.error("Error sending contact message:", error);
     res.status(500).json({
       success: false,
       message: "Failed to send message, please try again later.",

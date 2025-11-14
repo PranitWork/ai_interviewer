@@ -17,7 +17,6 @@ export const generateFeedback = (id: any) => async (dispatch: AppDispatch) => {
       withCredentials: true,
     });
 
-    console.log("feedback response:", res.data);
 
     // ✅ handle all common backend shapes
     const feedbackData =
@@ -30,7 +29,6 @@ export const generateFeedback = (id: any) => async (dispatch: AppDispatch) => {
 
     return { success: false, error: "Invalid feedback response", data: res.data };
   } catch (err: any) {
-    console.error("generateFeedback error:", err);
     const message =
       err.response?.data?.message ||
       err.response?.data?.error ||

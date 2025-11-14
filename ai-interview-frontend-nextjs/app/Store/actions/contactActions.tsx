@@ -7,7 +7,6 @@ export const asyncContact = (data: any) => async (dispatch: AppDispatch) => {
     const res = await axios.post("/contact/", data, {
       withCredentials: true,
     });
-    console.log("Contact Response:", res.data);
 
     if (res.data?.success) {
       // If you want to store contact form data in Redux

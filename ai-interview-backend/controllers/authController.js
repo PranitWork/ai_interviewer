@@ -45,7 +45,6 @@ export const sendOtp = async (req, res) => {
 
     res.status(200).json({ success: true, message: "OTP sent successfully" });
   } catch (err) {
-    console.error("Error in sendOtp:", err);
     res.status(500).json({ success: false, message: "Failed to send OTP" });
   }
 };
@@ -92,7 +91,6 @@ export const verifyAndRegister = async (req, res) => {
       user: { _id: user._id, name: user.name, email: user.email },
     });
   } catch (err) {
-    console.error("Error in verifyAndRegister:", err);
     res.status(500).json({ success: false, message: "Server error" });
   }
 };
@@ -106,9 +104,7 @@ export const loginUser = async (req, res) => {
     }
     const user = await User.findOne({ email: email });
     if (!user) return res.status(401).json({ success: false, message: "Invalid email" });
-      console.log(user)
     const isMatch = await bcrypt.compare(password,user.password);
-    console.log(isMatch)
     if (!isMatch) return res.status(401).json({ success: false, message: "Invalid password" });
 
     res.cookie("token", generateToken(user._id), {
@@ -140,7 +136,6 @@ export const forgotPassword = async (req, res) => {
      await user.save({ validateBeforeSave: false });
 
     const resetUrl = `${process.env.CLIENT_URL}/auth/reset-password/${resetToken}`;
-    console.log(resetUrl)
     const message = `
       <h2>Reset Your Password</h2>
       <p>Click below to reset your password:</p>
@@ -156,7 +151,6 @@ export const forgotPassword = async (req, res) => {
     
     res.json({ success: true, message: "Email sent successfully",resetUrl, });
   } catch (err) {
-    console.error(err);
     res.status(500).json({ success: false, message: "Email not sent" });
   }
 };
@@ -174,7 +168,6 @@ export const resetPassword = async (req, res) => {
       resetPasswordToken,
       resetPasswordExpire: { $gt: Date.now() },
     });
-    console.log(user)
 
     if (!user)
       return res.status(400).json({ success: false, message: "Invalid or expired token" });

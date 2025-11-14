@@ -7,10 +7,8 @@ export const checkPlanLimits = async (req, res, next) => {
     if (!user) return res.status(404).json({ message: "User not found" });
 
     const planName = user.plan?.trim().toLowerCase();
-    console.log("🔹 Checking plan:", planName);
 
     const plan = await Plan.findOne({ name: planName });
-    console.log("🔹 Plan result:", plan);
 
     if (!plan) {
       return res.status(500).json({
@@ -43,7 +41,6 @@ export const checkPlanLimits = async (req, res, next) => {
 
     next();
   } catch (error) {
-    console.error("❌ checkPlanLimits error:", error);
     res.status(500).json({ message: "Error checking plan limits" });
   }
 };

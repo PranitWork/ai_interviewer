@@ -13,7 +13,6 @@ export const asyncUpdateUser =
         withCredentials: true,
       });
 
-      // ✅ Your backend returns { message, user }
       if (response.data?.user) {
         dispatch(setUser(response.data.user));
         return {
@@ -22,11 +21,9 @@ export const asyncUpdateUser =
           user: response.data.user,
         };
       } else {
-        console.warn("Unexpected response structure:", response.data);
         return { success: false, message: "Unexpected server response" };
       }
     } catch (error: any) {
-      console.error("❌ asyncUpdateUser Error:", error);
       return {
         success: false,
         message:

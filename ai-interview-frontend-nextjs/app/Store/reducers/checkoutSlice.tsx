@@ -4,6 +4,7 @@ const initialState = {
   checkout: null,
   webhookData: null,
   status: null,
+  coupons: null,
 };
 
 const checkoutSlice = createSlice({
@@ -19,8 +20,11 @@ const checkoutSlice = createSlice({
     setStatus: (state, action) => {
       state.status = action.payload;
     },
+     setCoupon: (state, action) => {
+      state.coupons = action.payload;
+    },
   },
 });
 
-export const { setCheckout, setWebhookData, setStatus } = checkoutSlice.actions;
+export const { setCheckout, setWebhookData, setStatus,setCoupon } = checkoutSlice.actions;
 export default checkoutSlice.reducer;

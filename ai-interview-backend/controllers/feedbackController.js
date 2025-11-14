@@ -13,7 +13,6 @@ function cleanAndParseReport(text) {
   try {
     return JSON.parse(cleaned);
   } catch (e) {
-    console.error("⚠️ Could not parse AI JSON:", e);
     // fallback: store raw text as summary
     return { summary: cleaned };
   }
@@ -31,7 +30,6 @@ export const generateFeedbackReport = async (req, res) => {
 
     // 2️⃣ Extract the role from interview (assuming interview.role exists)
     const interviewRole = interview.role || "Unknown Role";
-    console.log("interview role",interviewRole)
     // 3️⃣ Build AI prompt
     const prompt = `
     You are a highly skilled AI interviewer and career mentor with deep expertise in assessing both technical and behavioral performance.
@@ -92,7 +90,6 @@ Follow this exact JSON format (return only valid JSON, no extra text):
       feedback,
     });
   } catch (error) {
-    console.error("❌ Feedback generation failed:", error);
     res.status(500).json({ message: "Feedback generation failed", error });
   }
 };

@@ -48,17 +48,14 @@ Guidelines:
     });
 
     let raw = completion.choices[0].message.content;
-    console.log("🔹 RAW GPT OUTPUT:\n", raw);
 
     // 🧹 Clean GPT response
     let cleaned = cleanAIResponse(raw);
-    console.log("✅ CLEANED OUTPUT:\n", cleaned);
 
     let questions;
     try {
       questions = JSON.parse(cleaned);
     } catch (err) {
-      console.error("❌ JSON Parse Failed:", err.message);
       return res.status(500).json({
         message: "AI returned invalid JSON format",
         rawResponse: raw,
@@ -78,7 +75,6 @@ Guidelines:
 
     res.json(interview);
   } catch (error) {
-    console.error("❌ Start Interview Error:", error.message);
     res.status(500).json({ message: "Failed to start interview" });
   }
 };
@@ -117,16 +113,13 @@ Guidelines:
     });
 
     let raw = completion.choices[0].message.content;
-    console.log("🔹 RAW FEEDBACK OUTPUT:\n", raw);
 
     let cleaned = cleanAIResponse(raw);
-    console.log("✅ CLEANED FEEDBACK:\n", cleaned);
 
     let feedback;
     try {
       feedback = JSON.parse(cleaned);
     } catch (err) {
-      console.error("❌ JSON Parse Failed:", err.message);
       return res.status(500).json({
         message: "AI returned invalid JSON format",
         rawResponse: raw,
@@ -144,7 +137,6 @@ Guidelines:
 
     res.json({ feedback });
   } catch (error) {
-    console.error("❌ Evaluate Answer Error:", error.message);
     res.status(500).json({ message: "Evaluation failed" });
   }
 };

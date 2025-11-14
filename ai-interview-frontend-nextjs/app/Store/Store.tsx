@@ -6,6 +6,7 @@ import userProfileSlice from "./reducers/userSlice"
 import analyticsSlice from "./reducers/analyticsSlice"
 import userCheckoutSlice from "./reducers/checkoutSlice"
 import contactSlice from "./reducers/contactSlice"
+import planSlice from "./reducers/planSlice"
 
 export const store = configureStore({
   reducer: {
@@ -16,6 +17,7 @@ export const store = configureStore({
     analyticsReducer : analyticsSlice,
     userCheckoutReducer: userCheckoutSlice,
     contactReducer:contactSlice, 
+    planReducer: planSlice,
   },
 });
 

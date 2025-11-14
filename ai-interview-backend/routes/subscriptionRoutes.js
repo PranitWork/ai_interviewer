@@ -9,8 +9,9 @@ import { protect } from "../middleware/authMiddleware.js";
 
 const router = express.Router();
 
+router.post("/webhook", express.raw({ type: "application/json" }), handleWebhook);
+
 router.post("/create", protect, createCheckoutSession);
-router.post("/webhook", express.json({ type: "*/*" }), handleWebhook);
 router.get("/status", protect, getSubscriptionStatus);
 router.put("/cancel", protect, cancelSubscription);
 

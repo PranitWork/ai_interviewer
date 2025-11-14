@@ -3,50 +3,19 @@
 import Pricing from "@/app/components/Pricing";
 import ProtectedRoute from "@/app/components/ProtectedRoute";
 import { motion } from "framer-motion";
-import { Crown, CheckCircle, Clock, Star } from "lucide-react";
-import { useState } from "react";
+import { Crown, Clock } from "lucide-react";
+import { useRouter } from "next/navigation";
+import { useSelector } from "react-redux";
 
 export default function PlanSection() {
-  const [currentPlan, setCurrentPlan] = useState("Pro");
 
-  const plans = [
-    {
-      name: "Free",
-      price: "$0",
-      description: "Perfect for beginners exploring AI interviews.",
-      features: [
-        "3 interviews / month",
-        "Basic feedback summary",
-        "Email support",
-      ],
-      gradient: "from-voxy-border to-voxy-muted",
-    },
-    {
-      name: "Pro",
-      price: "$19/mo",
-      description: "Best for individuals preparing seriously for tech roles.",
-      features: [
-        "Unlimited interviews",
-        "Detailed AI feedback report",
-        "Priority support",
-      ],
-      gradient: "from-voxy-primary to-voxy-secondary",
-    },
-    {
-      name: "Premium",
-      price: "$49/mo",
-      description: "For professionals seeking advanced AI interview analytics.",
-      features: [
-        "Unlimited interviews & feedbacks",
-        "Voice & video interview simulation",
-        "1-on-1 AI mentor sessions",
-        "Priority + chat support",
-      ],
-      gradient: "from-voxy-accent to-voxy-highlight",
-    },
-  ];
+  const user = useSelector((state:any)=> state.authReducer.user)
+  console.log("checkout user",user)
+const router = useRouter();
+  const handleSelectPlan = async (plan: string) => {
+  router.push(`/checkout?plan=${plan}`);
+};
 
-  const activePlan = plans.find((p) => p.name === currentPlan);
 
   return (
     <ProtectedRoute>
@@ -75,18 +44,18 @@ export default function PlanSection() {
             <Crown
               size={36}
               className={`${
-                currentPlan === "Premium"
+                user.plan === "Premium"
                   ? "text-voxy-accent"
                   : "text-voxy-primary"
               } mb-2`}
             />
             <h3 className="text-2xl font-bold text-voxy-text">
-              {currentPlan} Plan
+              {user.plan} Plan
             </h3>
             <p className="text-voxy-muted text-sm mt-1">
               You are currently subscribed to the{" "}
               <span className="text-voxy-primary font-medium">
-                {currentPlan}
+                {user.plan}
               </span>{" "}
               plan.
             </p>
@@ -106,7 +75,7 @@ export default function PlanSection() {
           </motion.button>
         </motion.div>
 
-        <Pricing/>
+        <Pricing onSelectPlan={handleSelectPlan} />
       </motion.div>
     </ProtectedRoute>
   );

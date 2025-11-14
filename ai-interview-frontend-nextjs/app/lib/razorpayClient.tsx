@@ -1,36 +1,49 @@
-import axios from "@/app/api/config";
+// app/lib/razorpayClient.ts
 
-export const openRazorpayCheckout = async (plan: string) => {
-  try {
-    const { data } = await axios.post(
-      "/subscription/create",
-      { plan },
-      { withCredentials: true }
-    );
+export const openRazorpayCheckout = (order: any) => {
+  const options = {
+    key: order.key,
+    amount: order.amount,
+    currency: order.currency,
+    name: "SwarAi",
+    description: "Subscription Payment",
+    order_id: order.id,
 
-    if (!data?.id) {
-      alert("Failed to start payment session");
-      return;
-    }
+    handler: function (response: any) {
+      console.log("Payment Success:", response);
+      window.location.href = "/checkout/success";
+    },
 
-    const options = {
-      key: data.key,
-      amount: data.amount,
-      currency: data.currency,
-      name: "Voxy AI",
-      description: `Upgrade to ${plan} Plan`,
-      order_id: data.id,
-      handler: function (response: any) {
-        alert("✅ Payment successful!");
-        // Optionally call /subscription/status
+    modal: {
+      ondismiss: function () {
+        console.log("Checkout Cancelled");
+        window.location.href = "/checkout/failed";
       },
-      theme: { color: "#2563EB" },
-    };
+    },
 
-    const razor = new (window as any).Razorpay(options);
-    razor.open();
-  } catch (err) {
-    alert("Payment initiation failed");
-    console.error(err);
+    prefill: {
+      name: "",
+      email: "",
+    },
+
+    theme: {
+      color: "#6A5ACD",
+    },
+  };
+
+  // Load script if not present
+  if (typeof window !== "undefined") {
+    if (!(window as any).Razorpay) {
+      const script = document.createElement("script");
+      script.src = "https://checkout.razorpay.com/v1/checkout.js";
+      script.onload = () => {
+        const rzp = new (window as any).Razorpay(options);
+        rzp.open();
+      };
+      document.body.appendChild(script);
+    } else {
+      const rzp = new (window as any).Razorpay(options);
+      rzp.open();
+    }
   }
 };

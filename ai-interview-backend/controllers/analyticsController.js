@@ -24,7 +24,6 @@ export const getUserAnalytics = async (req, res) => {
 
     res.json({ success: true, data });
   } catch (error) {
-    console.error("User analytics error:", error);
     res.status(500).json({ message: "Failed to fetch user analytics" });
   }
 };
@@ -51,7 +50,6 @@ export const getAdminAnalytics = async (req, res) => {
 
     res.json({ success: true, data });
   } catch (error) {
-    console.error("Admin analytics error:", error);
     res.status(500).json({ message: "Failed to fetch admin analytics" });
   }
 };

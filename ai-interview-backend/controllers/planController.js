@@ -26,7 +26,6 @@ export const createPlan = async (req, res) => {
 
     res.status(201).json({ message: "Plan created successfully", plan });
   } catch (error) {
-    console.error("❌ Error creating plan:", error);
     res.status(500).json({ message: "Failed to create plan" });
   }
 };
@@ -66,7 +65,6 @@ export const updatePlan = async (req, res) => {
       plan,
     });
   } catch (error) {
-    console.error("❌ Error updating plan:", error);
     res.status(500).json({ message: "Failed to update plan" });
   }
 };
@@ -75,9 +73,8 @@ export const updatePlan = async (req, res) => {
 export const getAllPlans = async (req, res) => {
   try {
     const plans = await Plan.find().sort({ price: 1 });
-    res.json(plans);
+    res.json({ success: true, plans });
   } catch (error) {
-    console.error("❌ Error fetching plans:", error);
-    res.status(500).json({ message: "Failed to fetch plans" });
+    res.status(500).json({ success: false, message: "Failed to load plans" });
   }
 };

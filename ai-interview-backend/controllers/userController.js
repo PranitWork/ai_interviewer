@@ -12,7 +12,6 @@ export const getAllUsers = async (req, res) => {
     const users = await User.find().select("-password -resetPasswordToken -resetPasswordExpire");
     res.json(users);
   } catch (error) {
-    console.error("❌ getAllUsers Error:", error.message);
     res.status(500).json({ message: "Failed to fetch users" });
   }
 };
@@ -28,7 +27,6 @@ export const getUserProfile = async (req, res) => {
 
     res.json(user);
   } catch (error) {
-    console.error("❌ getUserProfile Error:", error.message);
     res.status(500).json({ message: "Failed to fetch profile" });
   }
 };
@@ -62,7 +60,6 @@ export const updateUserProfile = async (req, res) => {
       },
     });
   } catch (error) {
-    console.error("❌ updateUserProfile Error:", error.message);
     res.status(500).json({ message: "Failed to update profile" });
   }
 };
@@ -85,7 +82,6 @@ export const deleteUser = async (req, res) => {
 
     res.json({ message: "User deleted successfully" });
   } catch (error) {
-    console.error("❌ deleteUser Error:", error.message);
     res.status(500).json({ message: "Failed to delete user" });
   }
 };
