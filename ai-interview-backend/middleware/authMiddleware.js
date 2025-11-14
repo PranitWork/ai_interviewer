@@ -23,7 +23,6 @@ export const protect = async (req, res, next) => {
 
     next();
   } catch (err) {
-    console.error("Auth error:", err.message);
     if (err.name === "TokenExpiredError") {
       return res.status(401).json({ message: "Token expired, please log in again" });
     }
