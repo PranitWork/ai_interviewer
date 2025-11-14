@@ -9,6 +9,7 @@ import { useDispatch } from "react-redux";
 import { toast } from "react-toastify";
 import { AppDispatch } from "@/app/Store/Store";
 import { asyncContact } from "@/app/Store/actions/contactActions";
+import { useAppDispatch } from "@/app/Store/hook";
 
 const Header = dynamic(() => import("@/app/components/Header"));
 const Footer = dynamic(() => import("@/app/components/Footer"));
@@ -29,7 +30,7 @@ type ContactFormValues = {
 };
 
 export default function Contact() {
-  const dispatch = useDispatch<AppDispatch>();
+const dispatch = useAppDispatch();
   const [sent, setSent] = useState(false);
 
   // ✅ React Hook Form setup

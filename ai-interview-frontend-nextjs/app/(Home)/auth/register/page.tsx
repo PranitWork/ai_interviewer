@@ -13,10 +13,11 @@ import { toast } from "react-toastify";
 import { useState } from "react";
 import { useRouter } from "next/navigation";
 import { GoogleLogin } from "@react-oauth/google";
+import { useAppDispatch } from "@/app/Store/hook";
 
 export default function Register() {
   const { register, handleSubmit, formState: { errors } } = useForm();
-  const dispatch = useDispatch<AppDispatch>();
+const dispatch = useAppDispatch();
   const router = useRouter();
 
   const [loading, setLoading] = useState(false);

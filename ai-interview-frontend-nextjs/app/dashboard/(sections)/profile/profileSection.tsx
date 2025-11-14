@@ -8,9 +8,10 @@ import { AppDispatch, RootState } from "@/app/Store/Store";
 import {  asyncUpdateUser } from "@/app/Store/actions/userActions";
 import { toast } from "react-toastify";
 import ProtectedRoute from "@/app/components/ProtectedRoute";
+import { useAppDispatch } from "@/app/Store/hook";
 
 export default function ProfileSection() {
-  const dispatch = useDispatch<AppDispatch>();
+  const dispatch = useAppDispatch();
   const userProfile = useSelector(
     (state: RootState) => state.authReducer.user
   );

@@ -13,6 +13,7 @@ import {
   ThumbsDown,
   X,
 } from "lucide-react";
+import { useAppDispatch } from "@/app/Store/hook";
 
 /* ---------------- TYPES ---------------- */
 interface FeedbackReport {
@@ -33,7 +34,7 @@ interface FeedbackItem {
 
 /* ---------------- MAIN COMPONENT ---------------- */
 export default function FeedbackReportCard() {
-  const dispatch = useDispatch<AppDispatch>();
+  const dispatch = useAppDispatch();
   const { allFeedbacks } = useSelector(
     (state: RootState) => state.feedbackReducer
   );

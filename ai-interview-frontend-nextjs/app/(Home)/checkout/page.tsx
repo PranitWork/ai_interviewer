@@ -8,9 +8,10 @@ import { useForm } from "react-hook-form";
 import { toast } from "react-toastify";
 import { openRazorpayCheckout } from "@/app/lib/razorpayClient";
 import ProtectedRoute from "@/app/components/ProtectedRoute";
+import { useAppDispatch } from "@/app/Store/hook";
 
 export default function CheckoutPage() {
-  const dispatch = useDispatch();
+const dispatch = useAppDispatch();
   const searchParams = useSearchParams();
   const selectedPlanName = searchParams.get("plan");
   const { register, handleSubmit } = useForm();

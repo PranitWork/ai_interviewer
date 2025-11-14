@@ -13,9 +13,10 @@ import {
   Clock,
 } from "lucide-react";
 import ProtectedRoute from "@/app/components/ProtectedRoute";
+import { useAppDispatch } from "@/app/Store/hook";
 
 export default function AnalyticsSection() {
-  const dispatch = useDispatch<AppDispatch>();
+  const dispatch = useAppDispatch();
   const analytics = useSelector(
     (state: RootState) => state.analyticsReducer.userAnalytics
   );

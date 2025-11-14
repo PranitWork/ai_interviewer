@@ -10,10 +10,11 @@ import { asyncResetPassword } from "@/app/Store/actions/authActions";
 import { toast } from "react-toastify";
 import { useParams, useRouter } from "next/navigation";
 import { useEffect } from "react";
+import { useAppDispatch } from "@/app/Store/hook";
 
 export default function ResetPasswordPage() {
   const { id } = useParams();
-  const dispatch = useDispatch<AppDispatch>();
+const dispatch = useAppDispatch();
   const { register, handleSubmit, formState: { errors } } = useForm();
   const router = useRouter();
 

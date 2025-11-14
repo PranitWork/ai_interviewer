@@ -4,11 +4,12 @@ import { motion } from "framer-motion";
 import Link from "next/link";
 import { Mail } from "lucide-react";
 import { useForm } from "react-hook-form";
-import { useDispatch } from "react-redux";
+
 import { AppDispatch } from "@/app/Store/Store";
 import { asyncForgotPassword } from "@/app/Store/actions/authActions";
 import { toast } from "react-toastify";
 import { useRouter } from "next/navigation";
+import { useAppDispatch } from "@/app/Store/hook";
 
 export default function ForgotPasswordPage() {
   const {
@@ -17,7 +18,7 @@ export default function ForgotPasswordPage() {
     formState: { errors },
   } = useForm();
 
-  const dispatch = useDispatch<AppDispatch>();
+  const dispatch = useAppDispatch();
   const router = useRouter();
 
   const forgetEmail = async (data: any) => {

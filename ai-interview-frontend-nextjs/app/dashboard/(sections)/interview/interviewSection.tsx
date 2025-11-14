@@ -24,9 +24,10 @@ import { generateFeedback } from "@/app/Store/actions/feedbackAction";
 import FeedbackSection from "../feedbacks/feedbackSection";
 import { toast } from "react-toastify";
 import ProtectedRoute from "@/app/components/ProtectedRoute";
+import { useAppDispatch } from "@/app/Store/hook";
 
 export default function InterviewSection() {
-  const dispatch = useDispatch<any>();
+const dispatch = useAppDispatch();
 
   const [started, setStarted] = useState(false);
   const [role, setRole] = useState("");

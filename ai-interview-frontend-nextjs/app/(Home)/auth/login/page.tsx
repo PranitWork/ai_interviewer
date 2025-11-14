@@ -13,6 +13,7 @@ import { useState } from "react";
 import { useRouter } from "next/navigation";
 import { toast } from "react-toastify";
 import { GoogleLogin } from "@react-oauth/google";
+import { useAppDispatch } from "@/app/Store/hook";
 
 export default function Login() {
   const {
@@ -20,7 +21,7 @@ export default function Login() {
     handleSubmit,
     formState: { errors },
   } = useForm();
-  const dispatch = useDispatch<AppDispatch>();
+const dispatch = useAppDispatch();
   const router = useRouter();
   const [loading, setLoading] = useState(false);
 

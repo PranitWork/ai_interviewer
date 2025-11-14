@@ -16,12 +16,13 @@ import { useDispatch, useSelector } from "react-redux";
 import { AppDispatch } from "@/app/Store/Store";
 import { asyncLogoutUser } from "@/app/Store/actions/authActions";
 import ProtectedRoute from "@/app/components/ProtectedRoute";
+import { useAppDispatch } from "@/app/Store/hook";
 
 export default function LogoutSection() {
   const [showConfirm, setShowConfirm] = useState(false);
   const [isLoggingOut, setIsLoggingOut] = useState(false);
   const router = useRouter();
-  const dispatch = useDispatch<AppDispatch>();
+  const dispatch = useAppDispatch();
 
   // ✅ Grab userProfile from Redux
   const userProfile = useSelector((state: any) => state.authReducer.user);
