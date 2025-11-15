@@ -3,17 +3,27 @@
 import { useState, useMemo, useEffect, ChangeEvent } from "react";
 import { motion } from "framer-motion";
 import { User, Mail, Pencil, Save, X } from "lucide-react";
-import { useDispatch, useSelector } from "react-redux";
-import { AppDispatch, RootState } from "@/app/Store/Store";
-import {  asyncUpdateUser } from "@/app/Store/actions/userActions";
+import { useSelector } from "react-redux";
+import { RootState } from "@/app/Store/Store";
+import { asyncUpdateUser } from "@/app/Store/actions/userActions";
 import { toast } from "react-toastify";
 import ProtectedRoute from "@/app/components/ProtectedRoute";
 import { useAppDispatch } from "@/app/Store/hook";
 
+/* ---------------------- TYPES ---------------------- */
+interface UserProfile {
+  name?: string;
+  email?: string;
+  avatar?: string;
+}
+
+/* ---------------------- COMPONENT ---------------------- */
 export default function ProfileSection() {
   const dispatch = useAppDispatch();
+
+  // ✔ Strong typing (NO MORE never type)
   const userProfile = useSelector(
-    (state: RootState) => state.authReducer.user
+    (state: RootState) => state.authReducer.user as UserProfile | null
   );
 
   const [editMode, setEditMode] = useState(false);
@@ -25,10 +35,11 @@ export default function ProfileSection() {
   );
   const avatarUrl = `https://api.dicebear.com/9.x/adventurer/png?seed=${randomSeed}`;
 
-
-
+  /* Load user name into state */
   useEffect(() => {
-    if (userProfile) setName(userProfile?.name || "");
+    if (userProfile) {
+      setName(userProfile.name || "");
+    }
   }, [userProfile]);
 
   const handleChange = (e: ChangeEvent<HTMLInputElement>) => {
@@ -37,6 +48,7 @@ export default function ProfileSection() {
 
   const handleSave = async () => {
     const result = await dispatch(asyncUpdateUser({ name }) as any);
+
     if (result?.success) {
       toast.success(result.message || "✅ Name updated successfully!");
       setEditMode(false);
@@ -116,7 +128,7 @@ export default function ProfileSection() {
                 {name}
               </h3>
               <p className="text-voxy-muted break-all">
-                {userProfile?.email}
+                {userProfile?.email || ""}
               </p>
             </div>
           </div>
