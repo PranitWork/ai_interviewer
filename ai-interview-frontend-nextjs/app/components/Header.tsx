@@ -19,20 +19,20 @@ export default function Header() {
     { name: "Contact", href: "/contact" },
   ];
 
-  // ✅ Scroll effect for sticky behavior
+  // Sticky behavior
   useEffect(() => {
     const handleScroll = () => {
-      if (window.scrollY > 10) setScrolled(true);
-      else setScrolled(false);
+      setScrolled(window.scrollY > 10);
     };
     window.addEventListener("scroll", handleScroll);
     return () => window.removeEventListener("scroll", handleScroll);
   }, []);
 
-  // ✅ Load theme from localStorage or system
+  // Load theme from system/localStorage
   useEffect(() => {
     const stored =
       typeof window !== "undefined" ? localStorage.getItem("theme") : null;
+
     const prefersDark =
       typeof window !== "undefined" &&
       window.matchMedia?.("(prefers-color-scheme: dark)").matches;
@@ -63,7 +63,7 @@ export default function Header() {
     return () => mm?.removeEventListener("change", onChange);
   }, []);
 
-  // ✅ Theme toggle
+  // Theme toggle
   const toggleTheme = useCallback(() => {
     setDarkMode((prev) => {
       const newMode = !prev;
@@ -74,8 +74,10 @@ export default function Header() {
     });
   }, []);
 
+  // Close menu on route change
   useEffect(() => setIsOpen(false), [pathname]);
 
+  // ESC key closes menu
   useEffect(() => {
     const onKey = (e: KeyboardEvent) => {
       if (e.key === "Escape") setIsOpen(false);
@@ -84,11 +86,16 @@ export default function Header() {
     return () => window.removeEventListener("keydown", onKey);
   }, []);
 
+  // Prevent body scroll when mobile menu open
   useEffect(() => {
     if (isOpen) {
       const prev = document.body.style.overflow;
       document.body.style.overflow = "hidden";
-      return () => (document.body.style.overflow = prev);
+
+      // ✅ Fixed cleanup function (must return void)
+      return () => {
+        document.body.style.overflow = prev;
+      };
     }
   }, [isOpen]);
 
