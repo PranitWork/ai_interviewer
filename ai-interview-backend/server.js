@@ -21,12 +21,22 @@ connectDB();
 
 const app = express();
 
-app.use(cors(
-  {
-    origin: process.env.CLIENT_URL,
-    credentials: true,
-  }
-));
+const allowedOrigins = [
+  "http://localhost:3000",
+ "https://swarai.vercel.app/"
+];
+
+app.use(cors({
+  origin: function (origin, callback) {
+    if (!origin || allowedOrigins.includes(origin)) {
+      callback(null, true);
+    } else {
+      callback(new Error("Not allowed by CORS"));
+    }
+  },
+  credentials: true,
+}));
+
 
 app.use(bodyParser.json());
 app.use(express.json());

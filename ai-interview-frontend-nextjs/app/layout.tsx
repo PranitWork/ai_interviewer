@@ -7,6 +7,7 @@ import AppInitializer from "./components/AppInitializer";
 import { ToastContainer } from "react-toastify";
 import Preloader from "./components/preloader/SwarAiPreloader";
 import { DarkLight } from "./components/DarkLightMood/DarkLight";
+import { Analytics } from "@vercel/analytics/next"
 
 const geistSans = Geist({
   variable: "--font-geist-sans",
@@ -47,6 +48,7 @@ export default function RootLayout({
             <AppInitializer />
             <Preloader />
             <DarkLight />
+            <Analytics/>
             {children}
           </GoogleOAuthProvider>
         </StoreProvider>
