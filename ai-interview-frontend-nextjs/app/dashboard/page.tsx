@@ -70,7 +70,7 @@ export default function Dashboard() {
         {/* ===== SIDEBAR ===== */}
         <aside
           className={clsx(
-            "fixed md:static top-0 left-0 z-40 h-full w-64 flex flex-col bg-voxy-surface/90 backdrop-blur-xl border-r border-voxy-border shadow-lg transition-transform duration-300 ease-in-out",
+            "fixed md:static top-0 left-0 z-40 h-full w-64 flex flex-col bg-voxy-surface/90 backdrop-blur-xl border-r border-voxy-border shadow-lg transition-transform duration-300 ",
             isOpen ? "translate-x-0" : "-translate-x-full md:translate-x-0"
           )}
         >
