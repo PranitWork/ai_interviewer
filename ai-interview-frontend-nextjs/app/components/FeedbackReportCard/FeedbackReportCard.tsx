@@ -263,7 +263,7 @@ function FeedbackList({
   items,
   color,
 }: {
-  icon: JSX.Element;
+  icon: React.ReactNode;
   title: string;
   items?: string[];
   color: "green" | "red";
