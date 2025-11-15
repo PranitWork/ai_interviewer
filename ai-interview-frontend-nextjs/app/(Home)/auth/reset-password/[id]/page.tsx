@@ -41,7 +41,7 @@ const dispatch = useAppDispatch();
       <motion.div
         initial={{ opacity: 0, y: 30 }}
         animate={{ opacity: 1, y: 0 }}
-        transition={{ duration: 0.6, ease: "easeOut" }}
+        transition={{ duration: 0.6, ease: easeOut }}
         className="w-full max-w-md bg-voxy-surface/80 backdrop-blur-xl border border-voxy-border rounded-2xl shadow-2xl shadow-voxy-primary/10 p-8"
       >
         {/* Logo / Title */}
