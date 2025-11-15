@@ -189,7 +189,8 @@ export default function Home() {
 
 
       {/* 💰 PRICING SECTION */}
-      <Pricing />
+      <Pricing onSelectPlan={(plan) => console.log("Selected:", plan)} />
+
 
       {/* 🌟 CTA SECTION */}
       <section className="mt-32 text-center px-8">
