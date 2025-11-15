@@ -1,7 +1,7 @@
 "use client";
 
 import Link from "next/link";
-import { motion } from "framer-motion";
+import { easeOut, motion } from "framer-motion";
 
 export default function NotFound() {
   return (
@@ -21,7 +21,7 @@ export default function NotFound() {
               <motion.div
         initial={{ opacity: 0, y: 40 }}
         animate={{ opacity: 1, y: 0 }}
-        transition={{ duration: 0.6, ease: "easeOut" }}
+        transition={{ duration: 0.6, ease: easeOut }}
         className="z-10 text-center pb-16 px-6"
       >
         <h1 className="text-[80px] md:text-[120px] font-extrabold text-voxy-primary leading-none mb-2">

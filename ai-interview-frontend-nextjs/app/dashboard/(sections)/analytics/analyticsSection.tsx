@@ -1,7 +1,7 @@
 "use client";
 
 import { useEffect } from "react";
-import { motion } from "framer-motion";
+import { easeOut, motion } from "framer-motion";
 import { useDispatch, useSelector } from "react-redux";
 import { AppDispatch, RootState } from "@/app/Store/Store";
 import { getUserAnalytics } from "@/app/Store/actions/AnalyticsActions";
@@ -63,7 +63,7 @@ export default function AnalyticsSection() {
       <motion.div
         initial={{ opacity: 0, y: 15 }}
         animate={{ opacity: 1, y: 0 }}
-        transition={{ duration: 0.4, ease: "easeOut" }}
+        transition={{ duration: 0.4, ease: easeOut }}
         className="space-y-8"
       >
         {/* === Stats Grid === */}

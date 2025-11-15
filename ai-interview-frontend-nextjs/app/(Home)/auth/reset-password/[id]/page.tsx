@@ -1,6 +1,6 @@
 "use client";
 
-import { motion } from "framer-motion";
+import { easeOut, motion } from "framer-motion";
 import Link from "next/link";
 import { Lock } from "lucide-react";
 import { useForm } from "react-hook-form";

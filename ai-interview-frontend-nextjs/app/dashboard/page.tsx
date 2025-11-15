@@ -1,6 +1,6 @@
 "use client";
 
-import { motion, AnimatePresence } from "framer-motion";
+import { motion, AnimatePresence, easeOut } from "framer-motion";
 import {
   BarChart3,
   MessageSquare,
@@ -161,7 +161,7 @@ export default function Dashboard() {
                 initial={{ opacity: 0, y: 15 }}
                 animate={{ opacity: 1, y: 0 }}
                 exit={{ opacity: 0, y: -15 }}
-                transition={{ duration: 0.35, ease: "easeOut" }}
+                transition={{ duration: 0.35, ease: easeOut }}
                 className="w-full"
               >
                 {activeItem?.component ?? (

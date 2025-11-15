@@ -1,7 +1,7 @@
 "use client";
 
 import { useState } from "react";
-import { motion, AnimatePresence } from "framer-motion";
+import { motion, AnimatePresence, easeOut } from "framer-motion";
 import {
   LogOut,
   Mail,
@@ -64,7 +64,7 @@ const user = {
       <motion.div
         initial={{ opacity: 0, y: 15 }}
         animate={{ opacity: 1, y: 0 }}
-        transition={{ duration: 0.5, ease: "easeOut" }}
+        transition={{ duration: 0.5, ease: easeOut }}
         className="space-y-10 max-w-3xl mx-auto"
       >
         {/* ===== HEADER ===== */}

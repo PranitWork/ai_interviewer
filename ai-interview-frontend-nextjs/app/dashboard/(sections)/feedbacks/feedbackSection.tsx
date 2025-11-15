@@ -3,7 +3,7 @@
 import { useMemo } from "react";
 import { useSelector } from "react-redux";
 import { RootState } from "@/app/Store/Store";
-import { motion } from "framer-motion";
+import { easeOut, motion } from "framer-motion";
 import {
   Gauge,
   MessageSquare,
@@ -89,7 +89,7 @@ export default function FeedbackSection() {
                   strokeDasharray: 440,
                   strokeDashoffset: 440 - (440 * technicalScore) / 10,
                 }}
-                transition={{ duration: 1.5, ease: "easeOut" }}
+                transition={{ duration: 1.5, ease: easeOut }}
               />
               <defs>
                 <linearGradient id="voxyGradient" x1="0%" y1="0%" x2="100%" y2="0%">

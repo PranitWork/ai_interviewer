@@ -2,7 +2,7 @@
 
 import FeedbackReportCard from "@/app/components/FeedbackReportCard/FeedbackReportCard";
 import ProtectedRoute from "@/app/components/ProtectedRoute";
-import { motion } from "framer-motion";
+import { easeOut, motion } from "framer-motion";
 
 export default function ReportsSection() {
   return (
@@ -10,7 +10,7 @@ export default function ReportsSection() {
       <motion.div
         initial={{ opacity: 0, y: 15 }}
         animate={{ opacity: 1, y: 0 }}
-        transition={{ duration: 0.5, ease: "easeOut" }}
+        transition={{ duration: 0.5, ease: easeOut }}
         className="space-y-10"
       >
         {/* ===== HEADER ===== */}

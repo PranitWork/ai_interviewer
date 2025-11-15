@@ -1,6 +1,6 @@
 "use client";
 
-import { motion } from "framer-motion";
+import { easeOut, motion } from "framer-motion";
 import Link from "next/link";
 import { Mail } from "lucide-react";
 import { useForm } from "react-hook-form";
@@ -36,7 +36,7 @@ export default function ForgotPasswordPage() {
       <motion.div
         initial={{ opacity: 0, y: 30 }}
         animate={{ opacity: 1, y: 0 }}
-        transition={{ duration: 0.6, ease: "easeOut" }}
+        transition={{ duration: 0.6, ease: easeOut }}
         className="w-full max-w-md bg-voxy-surface/80 backdrop-blur-xl border border-voxy-border rounded-2xl shadow-2xl p-8"
       >
         {/* === Logo / Title === */}

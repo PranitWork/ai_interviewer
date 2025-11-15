@@ -1,7 +1,7 @@
 "use client";
 
 import { useEffect, useState } from "react";
-import { motion } from "framer-motion";
+import { easeOut, motion } from "framer-motion";
 import {
   Mic,
   Moon,
@@ -62,7 +62,7 @@ export default function SettingsSection() {
       <motion.div
         initial={{ opacity: 0, y: 15 }}
         animate={{ opacity: 1, y: 0 }}
-        transition={{ duration: 0.5, ease: "easeOut" }}
+        transition={{ duration: 0.5, ease: easeOut }}
         className="space-y-10 max-w-3xl mx-auto"
       >
         {/* ===== HEADER ===== */}
