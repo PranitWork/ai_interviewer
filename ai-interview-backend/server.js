@@ -23,7 +23,7 @@ const app = express();
 
 const allowedOrigins = [
   "http://localhost:3000",
- "https://swarai.vercel.app/"
+ "https://swarai.vercel.app"
 ];
 
 app.use(cors({
