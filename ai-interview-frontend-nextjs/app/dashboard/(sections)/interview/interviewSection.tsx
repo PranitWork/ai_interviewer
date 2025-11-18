@@ -1,6 +1,11 @@
 "use client";
 
-import React, { useCallback, useEffect, useRef, useState } from "react";
+import React, {
+  useCallback,
+  useEffect,
+  useRef,
+  useState,
+} from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import {
   Mic,
@@ -15,19 +20,48 @@ import {
   SkipForward,
   X,
 } from "lucide-react";
-import { useDispatch } from "react-redux";
+import { toast } from "react-toastify";
+
+import ProtectedRoute from "@/app/components/ProtectedRoute";
+import { useAppDispatch } from "@/app/Store/hook";
 import {
   asyncStartInterview,
   asyncEvaluateInterview,
 } from "@/app/Store/actions/interviewActions";
 import { generateFeedback } from "@/app/Store/actions/feedbackAction";
 import FeedbackSection from "../feedbacks/feedbackSection";
-import { toast } from "react-toastify";
-import ProtectedRoute from "@/app/components/ProtectedRoute";
-import { useAppDispatch } from "@/app/Store/hook";
+
+/* ---------- Helpers for device & browser ---------- */
+
+const detectDevice = () => {
+  if (typeof navigator === "undefined") return "Detecting...";
+  const ua = navigator.userAgent;
+
+  if (/iPhone|iPad|iPod/i.test(ua)) return "iOS Device";
+  if (/Android/i.test(ua)) return "Android Device";
+  if (/Mac/i.test(ua)) return "MacOS";
+  if (/Win/i.test(ua)) return "Windows";
+  if (/Linux/i.test(ua)) return "Linux";
+
+  return "Unknown Device";
+};
+
+const detectBrowser = () => {
+  if (typeof navigator === "undefined") return "Detecting...";
+  const ua = navigator.userAgent;
+
+  if (/Edg/i.test(ua)) return "Microsoft Edge";
+  if (/Chrome/i.test(ua)) return "Chrome";
+  if (/Safari/i.test(ua) && !/Chrome/i.test(ua)) return "Safari";
+  if (/Firefox/i.test(ua)) return "Firefox";
+
+  return "Unknown Browser";
+};
 
 export default function InterviewSection() {
-const dispatch = useAppDispatch();
+  const dispatch = useAppDispatch();
+
+  /* ---------------------- STATE ---------------------- */
 
   const [started, setStarted] = useState(false);
   const [role, setRole] = useState("");
@@ -46,8 +80,17 @@ const dispatch = useAppDispatch();
   const [questionFeedback, setQuestionFeedback] = useState<any | null>(null);
 
   const [micBlocked, setMicBlocked] = useState(false);
+  const [showMicPermissionPopup, setShowMicPermissionPopup] = useState(true);
+  const [compatibility, setCompatibility] = useState({
+    mic: false,
+    recognition: false,
+    synthesis: false,
+    device: "Detecting...",
+    browser: "Detecting...",
+  });
 
-  /* refs */
+  /* ---------------------- REFS ---------------------- */
+
   const draftAnswersRef = useRef<Record<number, string>>({});
   const recognitionRef = useRef<any | null>(null);
   const isListeningRef = useRef(false);
@@ -67,7 +110,8 @@ const dispatch = useAppDispatch();
   /* QUESTION SPEAK */
   const speakQuestion = useCallback(
     (text: string) => {
-      if (!text) return;
+      if (!text || typeof window === "undefined") return;
+
       cancelSpeaking();
       try {
         const u = new SpeechSynthesisUtterance(text);
@@ -77,7 +121,8 @@ const dispatch = useAppDispatch();
 
         u.onstart = () => stopRecognition();
         u.onend = () => {
-          if (autoStartTimerRef.current) clearTimeout(autoStartTimerRef.current);
+          if (autoStartTimerRef.current)
+            clearTimeout(autoStartTimerRef.current);
           autoStartTimerRef.current = window.setTimeout(() => {
             startRecognition();
           }, 400);
@@ -88,13 +133,14 @@ const dispatch = useAppDispatch();
         console.warn("speakQuestion error:", err);
       }
     },
-    [cancelSpeaking]
+    [cancelSpeaking] // startRecognition, stopRecognition defined later but hoisted
   );
 
   /* EVALUATION SPEAK */
   const speakEvaluation = useCallback(
     (text: string) => {
-      if (!text) return;
+      if (!text || typeof window === "undefined") return;
+
       cancelSpeaking();
       try {
         const u = new SpeechSynthesisUtterance(text);
@@ -106,15 +152,16 @@ const dispatch = useAppDispatch();
 
         u.onstart = () => stopRecognition();
 
-        // ✅ Auto go to next question, but not report
         u.onend = () => {
           if (!evaluationInterruptedRef.current) {
             const nextIndex = questionIndex + 1;
             if (nextIndex < (interviewData?.questions?.length ?? 0)) {
               proceedToNext();
             } else {
-              // Do NOT auto open report, just stop here
-              console.log("✅ Last evaluation done, waiting for user to finish manually");
+              // end gracefully
+              console.log(
+                "✅ Last evaluation done, waiting for user to finish manually"
+              );
             }
           }
         };
@@ -124,13 +171,14 @@ const dispatch = useAppDispatch();
         console.warn("speakEval error:", err);
       }
     },
-    [questionIndex, interviewData]
+    [questionIndex, interviewData, cancelSpeaking] // proceedToNext, stopRecognition hoisted
   );
 
   /* -------------------- SPEECH RECOGNITION -------------------- */
 
   const initRecognition = useCallback(() => {
     if (typeof window === "undefined") return null;
+
     const SR =
       (window as any).SpeechRecognition ||
       (window as any).webkitSpeechRecognition;
@@ -158,7 +206,9 @@ const dispatch = useAppDispatch();
             const text = res[0].transcript.trim();
             finalTextRef.current =
               (finalTextRef.current ? finalTextRef.current + " " : "") + text;
-          } else interim += res[0].transcript;
+          } else {
+            interim += res[0].transcript;
+          }
         }
         setInterimText(interim);
         setFinalText(finalTextRef.current);
@@ -185,7 +235,7 @@ const dispatch = useAppDispatch();
 
   const startRecognition = useCallback(() => {
     if (!setupRecognitionIfNeeded()) {
-      toast.error("Speech recognition not supported");
+      toast.error("Speech recognition not supported in this browser");
       return;
     }
     if (isListeningRef.current) return;
@@ -212,17 +262,23 @@ const dispatch = useAppDispatch();
   const stopRecognition = useCallback(() => {
     try {
       recognitionRef.current?.stop();
-    } catch {}
+    } catch {
+      // ignore
+    }
     isListeningRef.current = false;
     setRecording(false);
   }, []);
 
   const requestMic = async () => {
+    if (typeof navigator === "undefined" || !navigator.mediaDevices) return false;
     try {
       await navigator.mediaDevices.getUserMedia({ audio: true });
+      setMicBlocked(false);
+      setCompatibility((prev) => ({ ...prev, mic: true }));
       return true;
     } catch {
       setMicBlocked(true);
+      setCompatibility((prev) => ({ ...prev, mic: false }));
       return false;
     }
   };
@@ -270,6 +326,7 @@ const dispatch = useAppDispatch();
   const handleSubmitAnswer = async () => {
     if (isListeningRef.current) stopRecognition();
     await new Promise((r) => setTimeout(r, 200));
+
     const ans = finalTextRef.current || finalText;
     draftAnswersRef.current[questionIndex] = ans;
     await evaluateAndShow(ans);
@@ -281,7 +338,7 @@ const dispatch = useAppDispatch();
     cancelSpeaking();
     const next = questionIndex + 1;
 
-    if (next < interviewData?.questions?.length) {
+    if (next < (interviewData?.questions?.length ?? 0)) {
       setQuestionIndex(next);
 
       const draft = draftAnswersRef.current[next] || "";
@@ -290,9 +347,9 @@ const dispatch = useAppDispatch();
       setInterimText("");
       setQuestionFeedback(null);
 
-      speakQuestion(interviewData.questions[next].question);
+      const nextQ = interviewData?.questions?.[next]?.question;
+      if (nextQ) speakQuestion(nextQ);
     } else {
-      // ✅ End gracefully without showing report automatically
       console.log("Interview finished. Awaiting user to finish manually.");
     }
   }, [questionIndex, interviewData, speakQuestion, cancelSpeaking]);
@@ -315,10 +372,17 @@ const dispatch = useAppDispatch();
   /* -------------------- START INTERVIEW -------------------- */
 
   const handleStart = async () => {
-    const ok = await requestMic();
-    if (!ok) return;
+    if (!role.trim()) {
+      toast.info("Please enter the target role to start the interview.");
+      return;
+    }
 
-    if (!role.trim()) return;
+    const ok = await requestMic();
+    if (!ok) {
+      toast.error("Microphone access is required to start the interview.");
+      return;
+    }
+
     setLoading(true);
 
     try {
@@ -330,7 +394,9 @@ const dispatch = useAppDispatch();
         setStarted(true);
         draftAnswersRef.current = {};
         setTimeout(() => speakQuestion(data.questions[0].question), 400);
-      } else toast.error("Failed to start interview");
+      } else {
+        toast.error("Failed to start interview");
+      }
     } catch {
       toast.error("Unexpected error");
     } finally {
@@ -384,11 +450,59 @@ const dispatch = useAppDispatch();
     mountedRef.current = true;
     return () => {
       mountedRef.current = false;
-      if (autoStartTimerRef.current) clearTimeout(autoStartTimerRef.current);
+      if (autoStartTimerRef.current)
+        clearTimeout(autoStartTimerRef.current);
       stopRecognition();
       cancelSpeaking();
     };
   }, [stopRecognition, cancelSpeaking]);
+
+  /* ----------------- COMPATIBILITY CHECK ----------------- */
+
+  useEffect(() => {
+    if (typeof window === "undefined") return;
+
+    const hasRecognition =
+      !!(window as any).SpeechRecognition ||
+      !!(window as any).webkitSpeechRecognition;
+    const hasSpeechSynthesis = !!window.speechSynthesis;
+
+    const device = detectDevice();
+    const browser = detectBrowser();
+
+    if (!navigator.mediaDevices || !navigator.mediaDevices.getUserMedia) {
+      setCompatibility({
+        mic: false,
+        recognition: hasRecognition,
+        synthesis: hasSpeechSynthesis,
+        device,
+        browser,
+      });
+      return;
+    }
+
+    navigator.mediaDevices
+      .getUserMedia({ audio: true })
+      .then((stream) => {
+        stream.getTracks().forEach((t) => t.stop());
+        setCompatibility({
+          mic: true,
+          recognition: hasRecognition,
+          synthesis: hasSpeechSynthesis,
+          device,
+          browser,
+        });
+      })
+      .catch(() => {
+        setCompatibility({
+          mic: false,
+          recognition: hasRecognition,
+          synthesis: hasSpeechSynthesis,
+          device,
+          browser,
+        });
+      });
+  }, []);
 
   /* =====================================================
    ======================== UI ===========================
@@ -396,12 +510,139 @@ const dispatch = useAppDispatch();
 
   return (
     <ProtectedRoute>
-      <div className="min-h-[80vh] flex flex-col items-center justify-center px-4">
+      <div className="min-h-[80vh] flex flex-col items-center justify-center px-4 relative">
+
+        {/* PRE-INTERVIEW COMPATIBILITY + MIC POPUP */}
+        <AnimatePresence>
+          {showMicPermissionPopup && (
+            <motion.div
+              initial={{ opacity: 0 }}
+              animate={{ opacity: 1 }}
+              exit={{ opacity: 0 }}
+              className="fixed inset-0 z-50 bg-black/60 backdrop-blur-md flex items-center justify-center p-4"
+            >
+              <motion.div
+                initial={{ scale: 0.95, opacity: 0 }}
+                animate={{ scale: 1, opacity: 1 }}
+                exit={{ scale: 0.95, opacity: 0 }}
+                className="bg-voxy-surface border border-voxy-border rounded-2xl p-6 sm:p-8 max-w-md w-full text-center shadow-2xl relative"
+              >
+                <button
+                  onClick={() => setShowMicPermissionPopup(false)}
+                  className="absolute top-4 right-4 text-voxy-muted hover:text-voxy-text"
+                >
+                  <X size={20} />
+                </button>
+
+                <h2 className="text-xl sm:text-2xl font-bold text-voxy-text mb-2">
+                  Get Ready for Your AI Interview 🎤
+                </h2>
+                <p className="text-sm text-voxy-muted mb-5">
+                  We’ll quickly check your device, browser, and microphone so your
+                  voice interview runs smoothly.
+                </p>
+
+                <div className="bg-voxy-surface/70 border border-voxy-border rounded-xl p-4 text-left text-sm space-y-2">
+                  <p>
+                    <span className="font-semibold text-voxy-text">
+                      Device:
+                    </span>{" "}
+                    {compatibility.device}
+                  </p>
+                  <p>
+                    <span className="font-semibold text-voxy-text">
+                      Browser:
+                    </span>{" "}
+                    {compatibility.browser}
+                  </p>
+                  <p>
+                    <span className="font-semibold text-voxy-text">
+                      Microphone:
+                    </span>{" "}
+                    {compatibility.mic ? (
+                      <span className="text-green-400 font-semibold">
+                        ✔ Enabled
+                      </span>
+                    ) : (
+                      <span className="text-red-400 font-semibold">
+                        ✘ Blocked / Not Accessible
+                      </span>
+                    )}
+                  </p>
+                  <p>
+                    <span className="font-semibold text-voxy-text">
+                      Speech Recognition:
+                    </span>{" "}
+                    {compatibility.recognition ? (
+                      <span className="text-green-400 font-semibold">
+                        ✔ Supported
+                      </span>
+                    ) : (
+                      <span className="text-red-400 font-semibold">
+                        ✘ Not Supported
+                      </span>
+                    )}
+                  </p>
+                  <p>
+                    <span className="font-semibold text-voxy-text">
+                      Voice Output:
+                    </span>{" "}
+                    {compatibility.synthesis ? (
+                      <span className="text-green-400 font-semibold">
+                        ✔ Supported
+                      </span>
+                    ) : (
+                      <span className="text-red-400 font-semibold">
+                        ✘ Not Supported
+                      </span>
+                    )}
+                  </p>
+                </div>
+
+                {!compatibility.recognition && (
+                  <p className="text-xs text-red-400 mt-3">
+                    ⚠ Your browser has limited support for speech recognition.
+                    For the best experience, use Chrome on desktop or Android.
+                  </p>
+                )}
+
+                <div className="flex gap-3 justify-center mt-6 flex-wrap">
+                  {!compatibility.mic && (
+                    <button
+                      onClick={requestMic}
+                      className="px-6 py-3 rounded-lg bg-gradient-to-r from-voxy-primary to-voxy-secondary text-voxy-text text-sm font-semibold"
+                    >
+                      Enable Microphone
+                    </button>
+                  )}
+
+                  <button
+                    onClick={() => setShowMicPermissionPopup(false)}
+                    className="px-6 py-3 rounded-lg border border-voxy-border text-voxy-muted text-sm font-semibold"
+                  >
+                    Continue
+                  </button>
+                </div>
+              </motion.div>
+            </motion.div>
+          )}
+        </AnimatePresence>
+
         {/* MIC BLOCKED POPUP */}
         <AnimatePresence>
           {micBlocked && (
-            <motion.div className="fixed inset-0 bg-black/60 z-50 flex items-center justify-center backdrop-blur-sm px-4">
-              <motion.div className="bg-voxy-surface p-6 sm:p-8 rounded-2xl border border-voxy-border w-full max-w-md text-center relative">
+            <motion.div
+              initial={{ opacity: 0 }}
+              animate={{ opacity: 1 }}
+              exit={{ opacity: 0 }}
+              className="fixed inset-0 bg-black/60 z-50 flex items-center justify-center backdrop-blur-sm px-4"
+            >
+              <motion.div
+                initial={{ scale: 0.95, opacity: 0 }}
+                animate={{ scale: 1, opacity: 1 }}
+                exit={{ scale: 0.95, opacity: 0 }}
+                className="bg-voxy-surface p-6 sm:p-8 rounded-2xl border border-voxy-border w-full max-w-md text-center relative shadow-2xl"
+              >
                 <button
                   onClick={() => setMicBlocked(false)}
                   className="absolute top-4 right-4 text-voxy-muted hover:text-voxy-text"
@@ -415,8 +656,14 @@ const dispatch = useAppDispatch();
                   Microphone Access Needed
                 </h2>
 
-                <p className="text-voxy-muted text-sm mb-6">
-                  Please enable microphone access to continue.
+                <p className="text-voxy-muted text-sm mb-4">
+                  Please enable microphone access in your browser settings to
+                  continue the voice interview.
+                </p>
+
+                <p className="text-xs text-voxy-muted mb-5">
+                  Tip: On mobile Safari / iOS, make sure you allow mic access and
+                  use the latest iOS version for better compatibility.
                 </p>
 
                 <button
@@ -424,7 +671,7 @@ const dispatch = useAppDispatch();
                     setMicBlocked(false);
                     requestMic().then((r) => r && startRecognition());
                   }}
-                  className="px-6 py-3 rounded-lg bg-gradient-to-r from-voxy-primary to-voxy-secondary text-voxy-text w-full"
+                  className="px-6 py-3 rounded-lg bg-gradient-to-r from-voxy-primary to-voxy-secondary text-voxy-text w-full text-sm font-semibold"
                 >
                   Try Again
                 </button>
@@ -437,12 +684,19 @@ const dispatch = useAppDispatch();
         <AnimatePresence mode="wait">
           {!started ? (
             /* =================== SETUP =================== */
-            <motion.div className="w-full max-w-lg bg-voxy-surface/80 border border-voxy-border rounded-2xl shadow-xl p-6 sm:p-8 text-center">
+            <motion.div
+              key="setup"
+              initial={{ opacity: 0, y: 12 }}
+              animate={{ opacity: 1, y: 0 }}
+              exit={{ opacity: 0, y: -12 }}
+              className="w-full max-w-lg bg-voxy-surface/80 border border-voxy-border rounded-2xl shadow-xl p-6 sm:p-8 text-center"
+            >
               <h2 className="text-2xl sm:text-3xl font-bold mb-2 text-voxy-text">
                 AI Voice Interview 🎤
               </h2>
               <p className="text-voxy-muted text-sm mb-6">
-                Describe the role & begin.
+                Describe your target role & job description to get a tailored
+                interview.
               </p>
 
               {/* ROLE */}
@@ -457,10 +711,10 @@ const dispatch = useAppDispatch();
                   />
                   <input
                     type="text"
-                    placeholder="Enter Your Job Role"
+                    placeholder="e.g. Frontend Developer, Data Analyst"
                     value={role}
                     onChange={(e) => setRole(e.target.value)}
-                    className="w-full pl-10 pr-3 py-3 bg-voxy-surface border border-voxy-border rounded-lg text-voxy-text"
+                    className="w-full pl-10 pr-3 py-3 bg-voxy-surface border border-voxy-border rounded-lg text-voxy-text text-sm outline-none focus:border-voxy-primary"
                   />
                 </div>
               </div>
@@ -468,41 +722,58 @@ const dispatch = useAppDispatch();
               {/* DETAILS */}
               <div className="mb-6 text-left">
                 <label className="text-sm text-voxy-muted mb-2 block">
-                  Job Description
+                  Job Description / Focus Areas
                 </label>
                 <textarea
                   rows={4}
                   value={details}
                   onChange={(e) => setDetails(e.target.value)}
-                  placeholder="Describe focus areas..."
-                  className="w-full px-3 py-3 bg-voxy-surface border border-voxy-border rounded-lg text-voxy-text"
+                  placeholder="Tech stack, experience level, domain, etc."
+                  className="w-full px-3 py-3 bg-voxy-surface border border-voxy-border rounded-lg text-voxy-text text-sm outline-none focus:border-voxy-primary resize-none"
                 />
+                <p className="text-xs text-voxy-muted mt-1">
+                  The more context you provide, the better the interview questions.
+                </p>
               </div>
 
               <motion.button
-                whileHover={{ scale: 1.05 }}
+                whileHover={!loading && role.trim() ? { scale: 1.03 } : {}}
                 onClick={handleStart}
                 disabled={!role.trim() || loading}
-                className={`w-full py-3 rounded-lg font-semibold ${
-                  loading
-                    ? "bg-voxy-border text-voxy-muted"
+                className={`w-full py-3 rounded-lg font-semibold text-sm flex items-center justify-center gap-2 ${
+                  !role.trim() || loading
+                    ? "bg-voxy-border text-voxy-muted cursor-not-allowed"
                     : "bg-gradient-to-r from-voxy-primary to-voxy-secondary text-voxy-text"
                 }`}
               >
                 {loading ? (
-                  <Loader2 className="animate-spin inline mr-2" />
+                  <>
+                    <Loader2 className="animate-spin" size={18} />
+                    Preparing interview...
+                  </>
                 ) : (
                   <>
-                    Start Interview <ArrowRight className="inline ml-2" size={18} />
+                    Start Interview
+                    <ArrowRight size={18} />
                   </>
                 )}
               </motion.button>
+
+              <p className="text-[11px] text-voxy-muted mt-3">
+                Make sure you are in a quiet place and your microphone is working.
+              </p>
             </motion.div>
           ) : (
             /* =================== INTERVIEW =================== */
-            <motion.div className="w-full max-w-3xl text-center">
+            <motion.div
+              key="interview"
+              initial={{ opacity: 0, y: 12 }}
+              animate={{ opacity: 1, y: 0 }}
+              exit={{ opacity: 0, y: -12 }}
+              className="w-full max-w-3xl text-center"
+            >
               <div className="flex flex-col md:flex-row items-start md:items-center justify-between mb-4 gap-4">
-                <div>
+                <div className="text-left">
                   <h2 className="text-2xl font-bold text-voxy-text">
                     AI Interview Session
                   </h2>
@@ -515,19 +786,23 @@ const dispatch = useAppDispatch();
                 <div className="flex gap-2 flex-wrap">
                   <button
                     onClick={handleRepeatQuestion}
-                    className="p-2 rounded-md border border-voxy-border text-voxy-muted"
+                    className="p-2 rounded-md border border-voxy-border text-voxy-muted text-sm flex items-center gap-1"
+                    disabled={loading || evaluating}
                   >
-                    <RotateCcw />
+                    <RotateCcw size={16} />
+                    Repeat
                   </button>
                   <button
                     onClick={handleSkipQuestion}
-                    className="p-2 rounded-md border border-voxy-border text-voxy-muted"
+                    className="p-2 rounded-md border border-voxy-border text-voxy-muted text-sm flex items-center gap-1"
+                    disabled={loading || evaluating}
                   >
-                    <SkipForward />
+                    <SkipForward size={16} />
+                    Skip
                   </button>
                   <button
                     onClick={handleReset}
-                    className="p-2 rounded-md border border-voxy-border text-voxy-muted"
+                    className="p-2 rounded-md border border-voxy-border text-voxy-muted text-sm"
                   >
                     Reset
                   </button>
@@ -538,7 +813,7 @@ const dispatch = useAppDispatch();
               <div className="bg-voxy-surface/70 border border-voxy-border rounded-xl p-4 sm:p-6 mb-6 text-left shadow-lg">
                 <div className="flex gap-3 items-start">
                   <Brain size={22} className="text-voxy-primary mt-1" />
-                  <p className="text-sm text-voxy-text">
+                  <p className="text-sm sm:text-base text-voxy-text leading-relaxed">
                     {interviewData?.questions?.[questionIndex]?.question}
                   </p>
                 </div>
@@ -556,8 +831,16 @@ const dispatch = useAppDispatch();
                   <Mic size={36} className="text-voxy-text" />
                 </div>
                 <p className="text-voxy-muted text-sm mt-2">
-                  {recording ? "Listening..." : "Click to start speaking"}
+                  {recording
+                    ? "Listening... click to stop"
+                    : "Click the mic to start speaking"}
                 </p>
+                {!compatibility.recognition && (
+                  <p className="text-[11px] text-voxy-muted mt-1">
+                    Your browser has limited voice support. You can still type
+                    your answer below.
+                  </p>
+                )}
               </div>
 
               {/* RESPONSE BOX */}
@@ -581,7 +864,7 @@ const dispatch = useAppDispatch();
                     />
                   ) : (
                     <div className="text-voxy-muted italic">
-                      Your speech will appear here...
+                      Your speech or typed answer will appear here...
                     </div>
                   )}
                 </div>
@@ -589,17 +872,28 @@ const dispatch = useAppDispatch();
                 {/* ACTION BUTTONS */}
                 <div className="flex gap-3 flex-wrap mt-4">
                   <motion.button
-                    whileHover={{ scale: 1.03 }}
+                    whileHover={
+                      !loading && !evaluating && (finalText || interimText)
+                        ? { scale: 1.03 }
+                        : {}
+                    }
                     onClick={handleSubmitAnswer}
-                    disabled={loading || evaluating || (!finalText && !interimText)}
-                    className={`px-4 py-2 rounded-lg font-semibold flex items-center gap-2 ${
-                      loading || evaluating
-                        ? "bg-voxy-border text-voxy-muted"
+                    disabled={
+                      loading ||
+                      evaluating ||
+                      (!finalText && !interimText)
+                    }
+                    className={`px-4 py-2 rounded-lg font-semibold flex items-center gap-2 text-sm ${
+                      loading || evaluating || (!finalText && !interimText)
+                        ? "bg-voxy-border text-voxy-muted cursor-not-allowed"
                         : "bg-gradient-to-r from-voxy-primary to-voxy-secondary text-voxy-text"
                     }`}
                   >
                     {loading || evaluating ? (
-                      <Loader2 className="animate-spin" size={18} />
+                      <>
+                        <Loader2 className="animate-spin" size={18} />
+                        Evaluating...
+                      </>
                     ) : (
                       <>
                         Submit Answer <MessageSquare size={18} />
@@ -614,7 +908,7 @@ const dispatch = useAppDispatch();
                       finalTextRef.current = v;
                       draftAnswersRef.current[questionIndex] = v;
                     }}
-                    className="px-4 py-2 rounded-lg border border-voxy-border text-voxy-muted"
+                    className="px-4 py-2 rounded-lg border border-voxy-border text-voxy-muted text-sm"
                   >
                     Save Draft
                   </button>
@@ -625,7 +919,7 @@ const dispatch = useAppDispatch();
                       finalTextRef.current = "";
                       draftAnswersRef.current[questionIndex] = "";
                     }}
-                    className="px-4 py-2 rounded-lg border border-voxy-border text-voxy-muted"
+                    className="px-4 py-2 rounded-lg border border-voxy-border text-voxy-muted text-sm"
                   >
                     Clear
                   </button>
@@ -656,7 +950,7 @@ const dispatch = useAppDispatch();
                     (interviewData?.questions?.length ?? 0) - 1 ? (
                       <button
                         onClick={handleManualNext}
-                        className="px-4 py-2 rounded-lg bg-gradient-to-r from-voxy-primary to-voxy-secondary text-voxy-text"
+                        className="px-4 py-2 rounded-lg bg-gradient-to-r from-voxy-primary to-voxy-secondary text-voxy-text text-sm"
                       >
                         Next Question
                       </button>
@@ -666,7 +960,7 @@ const dispatch = useAppDispatch();
                           evaluationInterruptedRef.current = true;
                           setShowPopup(true);
                         }}
-                        className="px-4 py-2 rounded-lg bg-gradient-to-r from-voxy-primary to-voxy-secondary text-voxy-text"
+                        className="px-4 py-2 rounded-lg bg-gradient-to-r from-voxy-primary to-voxy-secondary text-voxy-text text-sm"
                       >
                         Finish Interview
                       </button>
@@ -678,7 +972,7 @@ const dispatch = useAppDispatch();
                         cancelSpeaking();
                         setQuestionFeedback(null);
                       }}
-                      className="px-4 py-2 rounded-lg border border-voxy-border text-voxy-muted"
+                      className="px-4 py-2 rounded-lg border border-voxy-border text-voxy-muted text-sm"
                     >
                       Close
                     </button>
@@ -692,36 +986,54 @@ const dispatch = useAppDispatch();
         {/* COMPLETE POPUP */}
         <AnimatePresence>
           {showPopup && (
-            <motion.div className="fixed inset-0 bg-voxy-bg/70 flex items-center justify-center z-50 backdrop-blur-md px-4">
-              <div className="bg-voxy-surface/90 border border-voxy-border rounded-2xl shadow-2xl p-8 sm:p-10 text-center w-full max-w-md relative">
-                <CheckCircle2 className="text-voxy-primary mx-auto mb-4" size={48} />
+            <motion.div
+              initial={{ opacity: 0 }}
+              animate={{ opacity: 1 }}
+              exit={{ opacity: 0 }}
+              className="fixed inset-0 bg-voxy-bg/70 flex items-center justify-center z-50 backdrop-blur-md px-4"
+            >
+              <motion.div
+                initial={{ scale: 0.95, opacity: 0 }}
+                animate={{ scale: 1, opacity: 1 }}
+                exit={{ scale: 0.95, opacity: 0 }}
+                className="bg-voxy-surface/90 border border-voxy-border rounded-2xl shadow-2xl p-8 sm:p-10 text-center w-full max-w-md relative"
+              >
+                <CheckCircle2
+                  className="text-voxy-primary mx-auto mb-4"
+                  size={48}
+                />
 
                 <h3 className="text-xl sm:text-2xl font-bold text-voxy-text">
                   Interview Completed!
                 </h3>
 
                 <p className="text-voxy-muted mb-8 text-sm">
-                  View your feedback report.
+                  View your detailed feedback report to understand your strengths
+                  & improvement areas.
                 </p>
 
                 <div className="flex gap-4 flex-wrap justify-center">
                   <motion.button
                     whileHover={{ scale: 1.05 }}
                     onClick={handleGenerateReport}
-                    className="px-6 py-3 rounded-lg bg-gradient-to-r from-voxy-primary to-voxy-secondary text-voxy-text"
+                    className="px-6 py-3 rounded-lg bg-gradient-to-r from-voxy-primary to-voxy-secondary text-voxy-text text-sm font-semibold"
                   >
-                    {loading ? <Loader2 className="animate-spin" /> : "View Report"}
+                    {loading ? (
+                      <Loader2 className="animate-spin" />
+                    ) : (
+                      "View Report"
+                    )}
                   </motion.button>
 
                   <motion.button
                     whileHover={{ scale: 1.05 }}
                     onClick={handleReset}
-                    className="px-6 py-3 rounded-lg border border-voxy-border text-voxy-muted"
+                    className="px-6 py-3 rounded-lg border border-voxy-border text-voxy-muted text-sm font-semibold"
                   >
                     Back
                   </motion.button>
                 </div>
-              </div>
+              </motion.div>
             </motion.div>
           )}
         </AnimatePresence>
@@ -729,8 +1041,18 @@ const dispatch = useAppDispatch();
         {/* REPORT VIEW */}
         <AnimatePresence>
           {showReport && (
-            <motion.div className="fixed inset-0 bg-voxy-bg/80 backdrop-blur-md z-50 flex items-center justify-center p-4 sm:p-6 overflow-y-auto">
-              <motion.div className="relative bg-voxy-surface/95 border border-voxy-border rounded-2xl shadow-2xl p-4 sm:p-8 w-full max-w-4xl max-h-[90vh] overflow-y-auto">
+            <motion.div
+              initial={{ opacity: 0 }}
+              animate={{ opacity: 1 }}
+              exit={{ opacity: 0 }}
+              className="fixed inset-0 bg-voxy-bg/80 backdrop-blur-md z-50 flex items-center justify-center p-4 sm:p-6 overflow-y-auto"
+            >
+              <motion.div
+                initial={{ scale: 0.97, opacity: 0 }}
+                animate={{ scale: 1, opacity: 1 }}
+                exit={{ scale: 0.97, opacity: 0 }}
+                className="relative bg-voxy-surface/95 border border-voxy-border rounded-2xl shadow-2xl p-4 sm:p-8 w-full max-w-4xl max-h-[90vh] overflow-y-auto"
+              >
                 <button
                   onClick={() => setShowReport(false)}
                   className="absolute top-4 right-4 text-voxy-muted hover:text-voxy-text"
