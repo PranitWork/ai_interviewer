@@ -8,10 +8,14 @@ apiInstance.setApiKey(
 
 const sendEmail = async (options) => {
   try {
+    console.log("📨 Sending email to:", options.email);
+    console.log("🔑 Brevo API Key Exists:", !!process.env.BREVO_API_KEY);
+    console.log("📤 Sender:", process.env.BREVO_FROM);
+
     const emailData = {
       sender: {
         name: "SwarAI",
-        email: process.env.BREVO_FROM,  
+        email: process.env.BREVO_FROM,
       },
       to: [{ email: options.email }],
       subject: options.subject,
@@ -22,7 +26,7 @@ const sendEmail = async (options) => {
     console.log("Email sent:", result);
     return result;
   } catch (error) {
-    console.error("Brevo Error:", error.response?.body || error);
+    console.error("❌ Brevo Error:", error.response?.body || error);
     throw error;
   }
 };
