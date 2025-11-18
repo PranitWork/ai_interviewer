@@ -68,6 +68,14 @@ html.light {
     background-color: var(--color-voxy-secondary);
   }
 }
+@keyframes fadeIn {
+  from { opacity: 0; transform: scale(0.95); }
+  to { opacity: 1; transform: scale(1); }
+}
+
+.animate-fadeIn {
+  animation: fadeIn .3s ease-out;
+}
 
 /* === Scrollbar styling === */
 html {

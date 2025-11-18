@@ -25,6 +25,8 @@ const dispatch = useAppDispatch();
   const [otp, setOtp] = useState("");
   const [userData, setUserData] = useState<any>(null);
   const [showPassword, setShowPassword] = useState(false);
+  const [showPopup, setShowPopup] = useState(true);
+
 
   // 🔹 Step 1: Send OTP
   const handleSendOtp = async (data: any) => {
@@ -252,6 +254,40 @@ const dispatch = useAppDispatch();
             </Link>
           </p>
         </motion.div>
+        {showPopup && (
+  <div className="fixed inset-0 bg-black/50 backdrop-blur-sm z-50 flex items-center justify-center p-4">
+    <div className="bg-white dark:bg-voxy-surface w-full max-w-md p-6 rounded-2xl shadow-xl text-center animate-fadeIn">
+      
+      <h2 className="text-xl font-semibold mb-2 text-voxy-text">
+        Important Notice
+      </h2>
+
+      <p className="text-gray-700 dark:text-voxy-muted mb-3">
+        <b>SwarAI</b> is currently running in a <b>Beta Version</b>.
+      </p>
+
+      <p className="text-gray-700 dark:text-voxy-muted mb-3">
+        Since it's hosted on a <b>free server</b>, email-based signup/login is not supported.
+      </p>
+
+      <p className="text-gray-700 dark:text-voxy-muted mb-6">
+        Please use <b>Google Sign-In</b> to create your account.
+      </p>
+
+      <button
+        onClick={() => setShowPopup(false)}
+        className="bg-gradient-to-r from-voxy-primary to-voxy-secondary text-white px-5 py-2 rounded-lg font-medium hover:opacity-90 transition"
+      >
+        Continue
+      </button>
+
+      <p className="text-sm text-gray-500 mt-4">
+        Thank you for the support 🙏
+      </p>
+    </div>
+  </div>
+)}
+
       </main>
       <Footer />
     </>
