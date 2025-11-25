@@ -106,33 +106,37 @@ export const handleWebhook = async (req, res) => {
   try {
     const signature = req.headers["x-razorpay-signature"];
     const secret = process.env.RAZORPAY_WEBHOOK_SECRET;
-    if (!signature || !secret) {
-      console.warn("Missing signature or webhook secret");
-      return res.status(400).json({ success: false, message: "Bad request" });
-    }
 
-    // IMPORTANT: req.body is raw Buffer because route uses express.raw
-    const body = req.body instanceof Buffer ? req.body.toString("utf8") : JSON.stringify(req.body);
+    const body = req.body instanceof Buffer
+      ? req.body.toString("utf8")
+      : JSON.stringify(req.body);
 
-    const expected = crypto.createHmac("sha256", secret).update(body).digest("hex");
+    const expected = crypto
+      .createHmac("sha256", secret)
+      .update(body)
+      .digest("hex");
+
     if (!safeCompareHex(expected, signature)) {
-      console.warn("Invalid webhook signature");
       return res.status(400).json({ success: false, message: "Invalid signature" });
     }
-    console.log("RAW_BODY:", body);
-console.log("SIGNATURE:", signature);
-console.log("EXPECTED:", expected);
 
+    // ❗ FIX: This is NECESSARY
+    const parsed = JSON.parse(body);
 
-    const event = req.body.event;
-    const payload = req.body.payload || {};
+    const event = parsed.event;
+    const payload = parsed.payload || {};
     const payment = payload.payment ? payload.payment.entity : null;
 
-    // PAYMENT CAPTURED / SUCCESS (handle only if order_id exists)
+    console.log("WEBHOOK EVENT:", event);
+    console.log("ORDER ID:", payment?.order_id);
+
     if (event === "payment.captured" && payment?.order_id) {
-      const subscription = await Subscription.findOne({ razorpayOrderId: payment.order_id });
+      const subscription = await Subscription.findOne({
+        razorpayOrderId: payment.order_id,
+      });
+
       if (!subscription) {
-        // nothing to do
+        console.log("No matching subscription found.");
         return res.json({ success: true });
       }
 
@@ -142,18 +146,13 @@ console.log("EXPECTED:", expected);
 
       subscription.razorpayPaymentId = payment.id;
       subscription.status = "active";
-      subscription.currentPeriodEnd = new Date(now.getTime() + durationDays * 24 * 60 * 60 * 1000);
-      await subscription.save();
-      console.log(subscription)
-      // Apply coupon usage (atomic increment)
-      if (subscription.couponCode) {
-        await Coupon.findOneAndUpdate(
-          { code: subscription.couponCode },
-          { $inc: { usedCount: 1 } }
-        );
-      }
+      subscription.currentPeriodEnd = new Date(
+        now.getTime() + durationDays * 24 * 60 * 60 * 1000
+      );
 
-      // Update user plan and reset usage counters
+      await subscription.save();
+
+      // Update User
       await User.findByIdAndUpdate(subscription.user, {
         plan: subscription.plan,
         planExpiresAt: subscription.currentPeriodEnd,
@@ -168,7 +167,7 @@ console.log("EXPECTED:", expected);
       return res.json({ success: true });
     }
 
-    // PAYMENT FAILED
+    // FAILED PAYMENT
     if (event === "payment.failed" && payment?.order_id) {
       await Subscription.findOneAndUpdate(
         { razorpayOrderId: payment.order_id },
@@ -176,13 +175,13 @@ console.log("EXPECTED:", expected);
       );
     }
 
-    // Handle other events as needed...
     return res.json({ success: true });
   } catch (err) {
     console.error("Webhook handler error:", err);
     return res.status(500).json({ success: false });
   }
 };
+
 
 export const getSubscriptionStatus = async (req, res) => {
   try {
