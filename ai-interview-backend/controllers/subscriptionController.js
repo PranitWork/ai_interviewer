@@ -13,194 +13,249 @@ const razorpay = new Razorpay({
 
 export const createCheckoutSession = async (req, res) => {
   try {
-    let { plan, coupon, name, email } = req.body;
-    plan = plan?.toLowerCase();
+    const { plan, coupon, name, email } = req.body;
 
     if (!plan) {
-      return res.status(400).json({ success: false, message: "Plan is required" });
+      return res
+        .status(400)
+        .json({ success: false, message: "Plan is required" });
     }
 
+    // 🔍 Validate plan (case-sensitive: "Free"/"Pro"/"Advance")
     const selectedPlan = await Plan.findOne({ name: plan });
     if (!selectedPlan) {
-      return res.status(400).json({ success: false, message: "Invalid plan" });
+      return res
+        .status(400)
+        .json({ success: false, message: "Invalid plan" });
     }
 
+    // amount in ₹ (e.g. 199, 1599)
     let amount = selectedPlan.price;
     let discountAmount = 0;
-    const couponCode = coupon ? coupon.toUpperCase() : null;
+    let couponCode = coupon ? coupon.toUpperCase() : null;
 
+    // 🎟 Coupon logic
     if (couponCode) {
       const couponDoc = await Coupon.findOne({ code: couponCode });
 
-      if (!couponDoc) return res.json({ success: false, message: "Invalid coupon code" });
-      if (couponDoc.expiresAt < new Date()) return res.json({ success: false, message: "Coupon expired" });
-      if (couponDoc.usedCount >= couponDoc.maxUses)
-        return res.json({ success: false, message: "Coupon usage limit reached" });
+      if (!couponDoc) {
+        return res.json({ success: false, message: "Invalid coupon code" });
+      }
 
-      discountAmount = Math.round(amount * (couponDoc.discountPercent / 100));
-      amount -= discountAmount;
+      if (couponDoc.expiresAt < new Date()) {
+        return res.json({ success: false, message: "Coupon expired" });
+      }
+
+      if (couponDoc.usedCount >= couponDoc.maxUses) {
+        return res.json({
+          success: false,
+          message: "Coupon usage limit reached",
+        });
+      }
+
+      discountAmount = Math.round((amount * couponDoc.discountPercent) / 100);
+      amount = amount - discountAmount;
     }
 
-    if (amount <= 0)
-      return res.json({ success: false, message: "Amount must be > 0" });
+    if (amount <= 0) {
+      return res.json({
+        success: false,
+        message: "Final amount must be greater than 0",
+      });
+    }
 
-    const amountPaise = amount * 100;
+    // 💰 Convert to paise for Razorpay
+    const finalAmountPaise = amount * 100;
 
+    // ❌ Expire any existing active subscriptions for this user
     await Subscription.updateMany(
       { user: req.user._id, status: "active" },
       { status: "expired" }
     );
 
+    // 🧾 Create Razorpay order
     const order = await razorpay.orders.create({
-      amount: amountPaise,
+      amount: finalAmountPaise,
       currency: "INR",
-      receipt: "rcpt_" + Date.now(),
+      receipt: `rcpt_${Date.now()}`,
       notes: {
         userId: req.user._id.toString(),
         plan,
         coupon: couponCode || "none",
-        name,
-        email,
+        name: name || "",
+        email: email || "",
       },
     });
 
+    // 💾 Create Subscription row
     await Subscription.create({
       user: req.user._id,
-      plan,
+      plan, // "Free" | "Pro" | "Advance"
       razorpayOrderId: order.id,
       status: "pending",
-      billingName: name,
-      billingEmail: email,
-      couponCode,
+
+      billingName: name || undefined,
+      billingEmail: email || undefined,
+
+      couponCode: couponCode || undefined,
       discountAmount,
       finalPrice: amount,
     });
 
-    res.json({
+    return res.json({
       success: true,
       id: order.id,
-      amount: amountPaise,
+      amount: finalAmountPaise,
       currency: order.currency,
       key: process.env.RAZORPAY_KEY_ID,
     });
-  } catch (err) {
-    res.status(500).json({ success: false, message: "Checkout error" });
+  } catch (error) {
+    return res.status(500).json({
+      success: false,
+      message: "Failed to create checkout session",
+    });
   }
 };
 
-
+/**
+ * POST /api/subscription/webhook
+ * Razorpay webhook endpoint
+ */
 export const handleWebhook = async (req, res) => {
   try {
     const secret = process.env.RAZORPAY_WEBHOOK_SECRET;
     const signature = req.headers["x-razorpay-signature"];
+    const body = JSON.stringify(req.body);
 
-    // IMPORTANT: when you used express.raw({ type: "application/json" }) in the route,
-    // req.body is a Buffer. Use its raw string for HMAC verification.
-    const rawBody =
-      req.body instanceof Buffer
-        ? req.body.toString("utf8")
-        : typeof req.body === "string"
-        ? req.body
-        : JSON.stringify(req.body);
-
-    // Verify signature
-    const expected = crypto
+    const digest = crypto
       .createHmac("sha256", secret)
-      .update(rawBody)
+      .update(body)
       .digest("hex");
 
-    if (signature !== expected) {
-      console.warn("Webhook signature mismatch", { signature, expected });
-      return res.status(400).json({ success: false, message: "Invalid signature" });
+    if (digest !== signature) {
+      return res
+        .status(400)
+        .json({ success: false, message: "Invalid signature" });
     }
 
-    const parsed = JSON.parse(rawBody);
-    const event = parsed.event;
-    const payment = parsed.payload?.payment?.entity;
+    const event = req.body.event;
+    const paymentEntity = req.body.payload?.payment?.entity;
+    const subscriptionEntity = req.body.payload?.subscription?.entity;
 
-    // Some events might have order inside payload.order.entity
-    const orderId =
-      payment?.order_id || parsed.payload?.order?.entity?.id || null;
+    switch (event) {
+      case "payment.captured": {
+        const entity = paymentEntity;
+        if (!entity?.order_id) break;
 
-    console.log("Webhook event received:", event, "orderId:", orderId);
+        const subscription = await Subscription.findOne({
+          razorpayOrderId: entity.order_id,
+        });
 
-    if (event === "payment.captured") {
-      if (!payment) {
-        console.warn("payment.captured but no payment entity");
-        return res.json({ success: true });
-      }
+        if (!subscription) break;
 
-      const sub = await Subscription.findOne({ razorpayOrderId: orderId });
-      if (!sub) {
-        console.log("No subscription found for order:", orderId);
-        return res.json({ success: true });
-      }
+        const planDetails = await Plan.findOne({ name: subscription.plan });
+        const duration = planDetails?.durationDays || 30;
 
-      const planDetails = await Plan.findOne({ name: sub.plan });
-      const duration = planDetails?.durationDays || 30;
+        subscription.razorpayPaymentId = entity.id;
+        subscription.status = "active";
+        subscription.currentPeriodEnd = new Date(
+          Date.now() + duration * 24 * 60 * 60 * 1000
+        );
+        await subscription.save();
 
-      sub.razorpayPaymentId = payment.id;
-      sub.status = "active";
-      sub.currentPeriodEnd = new Date(Date.now() + duration * 24 * 60 * 60 * 1000);
-      await sub.save();
-
-      if (sub.couponCode) {
-        await Coupon.findOneAndUpdate({ code: sub.couponCode }, { $inc: { usedCount: 1 } });
-      }
-
-      await User.findByIdAndUpdate(sub.user, {
-        plan: sub.plan,
-        planExpiresAt: sub.currentPeriodEnd,
-        subscriptionId: sub._id.toString(),
-        usage: {
-          interviewsConducted: 0,
-          answersEvaluated: 0,
-          feedbacksGenerated: 0,
-        },
-      });
-
-      console.log("Subscription activated for user:", sub.user.toString());
-    }
-
-    if (event === "payment.failed") {
-      // payment may be undefined but we try to update by order id
-      await Subscription.findOneAndUpdate(
-        { razorpayOrderId: orderId },
-        {
-          $set: {
-            status: "failed",
-            razorpayPaymentId: payment?.id || null,
-          },
+        // ✅ Increment coupon usage only on successful payment
+        if (subscription.couponCode) {
+          await Coupon.findOneAndUpdate(
+            { code: subscription.couponCode },
+            { $inc: { usedCount: 1 } }
+          );
         }
-      );
 
-      console.log("Marked subscription failed for order:", orderId);
+        // ✅ Update user plan + expiry + subscriptionId + reset usage
+        await User.findByIdAndUpdate(subscription.user, {
+          plan: subscription.plan,
+          planExpiresAt: subscription.currentPeriodEnd,
+          subscriptionId: subscription._id.toString(),
+          usage: {
+            interviewsConducted: 0,
+            answersEvaluated: 0,
+            feedbacksGenerated: 0,
+          },
+        });
+
+        break;
+      }
+
+      case "payment.failed": {
+        const entity = paymentEntity;
+        if (!entity?.order_id) break;
+
+        await Subscription.findOneAndUpdate(
+          { razorpayOrderId: entity.order_id },
+          { status: "failed" }
+        );
+        break;
+      }
+
+      case "subscription.cancelled": {
+        const entity = subscriptionEntity;
+        if (!entity?.id) break;
+
+        const sub = await Subscription.findOneAndUpdate(
+          { razorpaySubscriptionId: entity.id },
+          { status: "canceled" },
+          { new: true }
+        );
+
+        if (sub) {
+          // downgrade user to Free
+          await User.findByIdAndUpdate(sub.user, {
+            plan: "Free",
+            planExpiresAt: null,
+            subscriptionId: null,
+          });
+        }
+
+        break;
+      }
+
+      default:
     }
 
-    // You can handle other events here (order.paid, subscription.charged, etc.)
-
-    return res.json({ success: true });
-  } catch (err) {
-    console.error("Webhook handler error:", err);
-    return res.status(500).json({ success: false });
+    res.json({ success: true });
+  } catch (error) {
+    res.status(500).json({ success: false });
   }
 };
 
-
+// 🔵 GET STATUS
 export const getSubscriptionStatus = async (req, res) => {
   try {
-    const sub = await Subscription.findOne({ user: req.user._id })
-      .sort({ createdAt: -1 });
+    // get latest subscription for this user
+    const subscription = await Subscription.findOne({ user: req.user._id })
+      .sort({ createdAt: -1 })
+      .exec();
 
-    if (!sub) {
-      return res.json({ success: true, plan: "free", status: "inactive", expiry: null });
+    if (!subscription) {
+      return res.json({
+        success: true,
+        plan: "free",
+        status: "inactive",
+        expiry: null,
+      });
     }
 
-    if (sub.currentPeriodEnd < new Date() && sub.status === "active") {
-      sub.status = "expired";
-      await sub.save();
+    // auto-expire if past
+    if (
+      subscription.currentPeriodEnd &&
+      subscription.currentPeriodEnd < new Date() &&
+      subscription.status === "active"
+    ) {
+      subscription.status = "expired";
+      await subscription.save();
 
-      await User.findByIdAndUpdate(sub.user, {
+      // downgrade user as well
+      await User.findByIdAndUpdate(subscription.user, {
         plan: "free",
         planExpiresAt: null,
         subscriptionId: null,
@@ -209,24 +264,37 @@ export const getSubscriptionStatus = async (req, res) => {
 
     res.json({
       success: true,
-      plan: sub.plan,
-      status: sub.status,
-      expiry: sub.currentPeriodEnd,
+      plan: subscription.plan,
+      status: subscription.status,
+      expiry: subscription.currentPeriodEnd,
     });
-  } catch {
-    res.status(500).json({ success: false, message: "Status error" });
+  } catch (error) {
+    res
+      .status(500)
+      .json({ success: false, message: "Failed to fetch status" });
   }
 };
 
-
+// 🔴 CANCEL SUBSCRIPTION
 export const cancelSubscription = async (req, res) => {
   try {
-    const sub = await Subscription.findOne({ user: req.user._id }).sort({ createdAt: -1 });
+    const sub = await Subscription.findOne({ user: req.user._id }).sort({
+      createdAt: -1,
+    });
 
-    if (!sub) return res.status(404).json({ success: false, message: "No subscription found" });
-    if (sub.status !== "active")
-      return res.status(400).json({ success: false, message: "Subscription is not active" });
+    if (!sub) {
+      return res
+        .status(404)
+        .json({ success: false, message: "No subscription" });
+    }
 
+    if (sub.status !== "active") {
+      return res
+        .status(400)
+        .json({ success: false, message: "Subscription is not active" });
+    }
+
+    // if you are using Razorpay recurring plans
     if (sub.razorpaySubscriptionId) {
       await razorpay.subscriptions.cancel(sub.razorpaySubscriptionId);
     }
@@ -234,14 +302,15 @@ export const cancelSubscription = async (req, res) => {
     sub.status = "canceled";
     await sub.save();
 
+    // downgrade user
     await User.findByIdAndUpdate(sub.user, {
-      plan: "free",
+      plan: "Free",
       planExpiresAt: null,
       subscriptionId: null,
     });
 
     res.json({ success: true, message: "Subscription canceled" });
-  } catch {
+  } catch (error) {
     res.status(500).json({ success: false, message: "Cancel failed" });
   }
 };
