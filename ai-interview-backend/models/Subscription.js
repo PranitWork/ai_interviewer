@@ -1,3 +1,4 @@
+// models/Subscription.js
 import mongoose from "mongoose";
 
 const subscriptionSchema = new mongoose.Schema(
@@ -7,12 +8,12 @@ const subscriptionSchema = new mongoose.Schema(
     plan: {
       type: String,
       enum: ["free", "pro", "advance"],
-      default: "free", // ✅ fixed
+      default: "free",
     },
 
     razorpayOrderId: String,
     razorpayPaymentId: String,
-    razorpaySubscriptionId: String, // for recurring later
+    razorpaySubscriptionId: String,
 
     status: {
       type: String,
@@ -26,8 +27,8 @@ const subscriptionSchema = new mongoose.Schema(
     billingEmail: String,
 
     couponCode: String,
-    discountAmount: { type: Number, default: 0 }, // ₹
-    finalPrice: Number, // ₹ after discount
+    discountAmount: { type: Number, default: 0 },
+    finalPrice: Number,
   },
   { timestamps: true }
 );

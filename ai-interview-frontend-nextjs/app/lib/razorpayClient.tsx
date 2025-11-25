@@ -1,7 +1,5 @@
 // app/lib/razorpayClient.ts
 
-import { toast } from "react-toastify";
-
 export const openRazorpayCheckout = (order: any) => {
   const options = {
     key: order.key,
@@ -12,13 +10,13 @@ export const openRazorpayCheckout = (order: any) => {
     order_id: order.id,
 
     handler: function (response: any) {
-      toast.success("Payment Success:", response);
+      console.log("Payment Success:", response);
       window.location.href = "/checkout/success";
     },
 
     modal: {
       ondismiss: function () {
-        toast.error("Checkout Cancelled");
+        console.log("Checkout Cancelled");
         window.location.href = "/checkout/failed";
       },
     },

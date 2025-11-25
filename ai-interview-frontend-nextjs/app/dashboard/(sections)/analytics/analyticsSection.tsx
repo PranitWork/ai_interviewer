@@ -53,7 +53,6 @@ export default function AnalyticsSection() {
       color: "from-voxy-primary to-voxy-secondary",
     },
   ];
-
   const lastFeedbackSummary =
     analytics?.lastFeedback?.summary ??
     "No feedback available yet — complete an interview to get AI insights!";

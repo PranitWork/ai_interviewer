@@ -1,3 +1,4 @@
+// models/Plan.js
 import mongoose from "mongoose";
 
 const planSchema = new mongoose.Schema({
@@ -7,7 +8,7 @@ const planSchema = new mongoose.Schema({
     unique: true,
     required: true,
   },
-  price: { type: Number, required: true }, // stored in paise
+  price: { type: Number, required: true }, // ₹ Rupees
   maxInterviews: { type: Number, default: 3 },
   maxFeedbacks: { type: Number, default: 6 },
   durationDays: { type: Number, default: 30 },

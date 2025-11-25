@@ -9,7 +9,9 @@ import { useSelector } from "react-redux";
 
 export default function PlanSection() {
 
-  const user = useSelector((state:any)=> state.authReducer.user)
+  const user = useSelector(
+      (state: any) => state.analyticsReducer.userAnalytics
+    );
 const router = useRouter();
   const handleSelectPlan = async (plan: string) => {
   router.push(`/checkout?plan=${plan}`);
@@ -49,7 +51,7 @@ const router = useRouter();
               } mb-2`}
             />
             <h3 className="text-2xl font-bold text-voxy-text">
-              {user.plan} Plan
+              {user.currentPlan.toUpperCase()} Plan
             </h3>
             <p className="text-voxy-muted text-sm mt-1">
               You are currently subscribed to the{" "}
@@ -62,7 +64,9 @@ const router = useRouter();
 
           <div className="flex items-center justify-center gap-2 mt-4 text-voxy-muted text-sm">
             <Clock size={16} />
-            <span>Next renewal: Dec 1, 2025</span>
+            <span>Next renewal: {user?.planExpiry
+        ? new Date(user.planExpiry).toLocaleDateString()
+        : "No expiry"}</span>
           </div>
 
           <motion.button

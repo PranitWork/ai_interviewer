@@ -1,3 +1,4 @@
+// models/User.js
 import mongoose from "mongoose";
 import crypto from "crypto";
 
@@ -8,12 +9,7 @@ const userSchema = new mongoose.Schema(
     password: String,
     role: { type: String, enum: ["user", "admin"], default: "user" },
 
-    // ✅ keep same as Plan.name & Subscription.plan
-    plan: {
-      type: String,
-      enum: ["free", "pro", "advance"],
-      default: "free",
-    },
+    plan: { type: String, enum: ["free", "pro", "advance"], default: "free" },
     planExpiresAt: Date,
 
     subscriptionId: String,
@@ -36,7 +32,7 @@ userSchema.methods.getResetPasswordToken = function () {
     .createHash("sha256")
     .update(resetToken)
     .digest("hex");
-  this.resetPasswordExpire = Date.now() + 10 * 60 * 1000; // 10 mins
+  this.resetPasswordExpire = Date.now() + 10 * 60 * 1000;
   return resetToken;
 };
 
