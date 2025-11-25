@@ -118,6 +118,10 @@ export const handleWebhook = async (req, res) => {
       console.warn("Invalid webhook signature");
       return res.status(400).json({ success: false, message: "Invalid signature" });
     }
+    console.log("RAW_BODY:", body);
+console.log("SIGNATURE:", signature);
+console.log("EXPECTED:", expected);
+
 
     const event = req.body.event;
     const payload = req.body.payload || {};
