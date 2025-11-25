@@ -9,7 +9,8 @@ export default function FirstVisitPopup() {
   const [open, setOpen] = useState(false);
 
   // ✅ FIX: Strong typing ensures .focus() always exists
-  const closeRef = useRef<HTMLButtonElement>(null!);
+const closeRef = useRef<HTMLButtonElement | null>(null) as React.MutableRefObject<HTMLButtonElement | null>;
+
 
   // Show popup only on first visit
   useEffect(() => {
