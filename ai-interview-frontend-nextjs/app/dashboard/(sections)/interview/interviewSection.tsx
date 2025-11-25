@@ -130,7 +130,7 @@ export default function InterviewSection() {
 
         window.speechSynthesis.speak(u);
       } catch (err) {
-        console.warn("speakQuestion error:", err);
+        toast.error("speakQuestion error:", err);
       }
     },
     [cancelSpeaking] // startRecognition, stopRecognition defined later but hoisted
@@ -159,16 +159,14 @@ export default function InterviewSection() {
               proceedToNext();
             } else {
               // end gracefully
-              console.log(
-                "✅ Last evaluation done, waiting for user to finish manually"
-              );
+              return 0;
             }
           }
         };
 
         window.speechSynthesis.speak(u);
-      } catch (err) {
-        console.warn("speakEval error:", err);
+      } catch (data) {
+        return toast.error(`speakEval error: ${data}` );
       }
     },
     [questionIndex, interviewData, cancelSpeaking] // proceedToNext, stopRecognition hoisted
@@ -187,7 +185,7 @@ export default function InterviewSection() {
     const r = new SR();
     r.lang = "en-US";
     r.interimResults = true;
-    r.continuous = false;
+    r.continuous = true;
     return r;
   }, []);
 
@@ -214,10 +212,18 @@ export default function InterviewSection() {
         setFinalText(finalTextRef.current);
       };
 
-      r.onend = () => {
-        isListeningRef.current = false;
-        setRecording(false);
-      };
+     r.onend = () => {
+  isListeningRef.current = false;
+  setRecording(false);
+
+  // If user did not manually stop the mic, restart it
+  if (recording) {
+    setTimeout(() => {
+      try { r.start(); } catch (_) {}
+    }, 300);
+  }
+};
+
 
       r.onerror = (err: any) => {
         if (
@@ -241,9 +247,12 @@ export default function InterviewSection() {
     if (isListeningRef.current) return;
 
     try {
-      finalTextRef.current = "";
-      setInterimText("");
-      setFinalText("");
+      const existingDraft = draftAnswersRef.current[questionIndex] || "";
+
+finalTextRef.current = existingDraft;
+setFinalText(existingDraft);
+setInterimText("");
+
       recognitionRef.current.start();
       isListeningRef.current = true;
       setRecording(true);
@@ -334,25 +343,36 @@ export default function InterviewSection() {
 
   /* -------------------- NEXT QUESTION -------------------- */
 
-  const proceedToNext = useCallback(() => {
-    cancelSpeaking();
-    const next = questionIndex + 1;
+const proceedToNext = useCallback(() => {
+  cancelSpeaking();
 
-    if (next < (interviewData?.questions?.length ?? 0)) {
-      setQuestionIndex(next);
+  const current = questionIndex;
+  const next = current + 1;
+  const total = (interviewData?.questions?.length ?? 0);
 
-      const draft = draftAnswersRef.current[next] || "";
-      finalTextRef.current = draft;
-      setFinalText(draft);
-      setInterimText("");
-      setQuestionFeedback(null);
+  if (next < total) {
+    // Clear the stored answer for the question we're leaving so it won't reappear
+    // (this removes the submitted / drafted answer for the previous question)
+    draftAnswersRef.current[current] = "";
 
-      const nextQ = interviewData?.questions?.[next]?.question;
-      if (nextQ) speakQuestion(nextQ);
-    } else {
-      console.log("Interview finished. Awaiting user to finish manually.");
-    }
-  }, [questionIndex, interviewData, speakQuestion, cancelSpeaking]);
+    // Reset current text state so next question starts fresh
+    finalTextRef.current = "";
+    setFinalText("");
+    setInterimText("");
+
+    // Move to next question
+    setQuestionIndex(next);
+
+    // Clear any per-question UI feedback
+    setQuestionFeedback(null);
+
+    // Ask the next question out loud
+    const nextQ = interviewData?.questions?.[next]?.question;
+    if (nextQ) speakQuestion(nextQ);
+  } else {
+    toast.success("Interview finished.");
+  }
+}, [questionIndex, interviewData, speakQuestion, cancelSpeaking]);
 
   const handleManualNext = () => {
     evaluationInterruptedRef.current = true;
@@ -368,6 +388,12 @@ export default function InterviewSection() {
     const q = interviewData?.questions?.[questionIndex]?.question;
     if (q) speakQuestion(q);
   };
+
+/* -------------------- Finish Interview -------------------- */
+  const handlefinishInterview =()=>{
+     evaluationInterruptedRef.current = true;
+    cancelSpeaking();
+  }
 
   /* -------------------- START INTERVIEW -------------------- */
 
@@ -386,22 +412,24 @@ export default function InterviewSection() {
     setLoading(true);
 
     try {
-      const { success, data } = await dispatch(
-        asyncStartInterview({ role, details })
-      );
-      if (success && data) {
-        setInterviewData(data);
-        setStarted(true);
-        draftAnswersRef.current = {};
-        setTimeout(() => speakQuestion(data.questions[0].question), 400);
-      } else {
-        toast.error("Failed to start interview");
-      }
-    } catch {
-      toast.error("Unexpected error");
-    } finally {
-      setLoading(false);
-    }
+  const response = await dispatch(asyncStartInterview({ role, details }));
+
+  // ⛔ Fix: Use correct condition
+  if (response.success) {
+    setInterviewData(response.data);
+    setStarted(true);
+    draftAnswersRef.current = {};
+
+    setTimeout(() => speakQuestion(response.data.questions[0].question), 400);
+  } else {
+    toast.error(response.error || "Failed to start interview");
+  }
+
+} catch {
+  toast.error("Unexpected error");
+} finally {
+  setLoading(false);
+}
   };
 
   /* -------------------- RESET -------------------- */
@@ -959,6 +987,7 @@ export default function InterviewSection() {
                         onClick={() => {
                           evaluationInterruptedRef.current = true;
                           setShowPopup(true);
+                          handlefinishInterview();
                         }}
                         className="px-4 py-2 rounded-lg bg-gradient-to-r from-voxy-primary to-voxy-secondary text-voxy-text text-sm"
                       >
@@ -1054,7 +1083,7 @@ export default function InterviewSection() {
                 className="relative bg-voxy-surface/95 border border-voxy-border rounded-2xl shadow-2xl p-4 sm:p-8 w-full max-w-4xl max-h-[90vh] overflow-y-auto"
               >
                 <button
-                  onClick={() => setShowReport(false)}
+                  onClick={() => {setShowReport(false); handleReset()}}
                   className="absolute top-4 right-4 text-voxy-muted hover:text-voxy-text"
                 >
                   <X size={22} />

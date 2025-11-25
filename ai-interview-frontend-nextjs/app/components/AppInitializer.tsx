@@ -11,7 +11,6 @@ import { useAppDispatch } from "../Store/hook";
 export default function AppInitializer() {
 const dispatch = useAppDispatch();
   const response = useSelector((state:any)=>state.authReducer.user);
-  console.log(response,"user exist")
   useEffect(() => {
     dispatch(asyncCurrentUser());
     dispatch(asyncGetAllFeedbacks());

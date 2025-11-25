@@ -23,21 +23,24 @@ export const checkPlanLimits = async (req, res, next) => {
 
     const path = req.originalUrl.toLowerCase();
 
-    if (path.includes("interview")) {
-      if (usage.interviewsConducted >= plan.maxInterviews) {
-        return res.status(403).json({
-          message: `You've reached the interview limit for your ${plan.name} plan. Upgrade to continue.`,
-        });
-      }
-    }
+   if (path.includes("interview")) {
+  if (usage.interviewsConducted >= plan.maxInterviews) {
+    return res.status(403).json({
+      success: false,
+      error: `You've reached the interview limit for your ${plan.name} plan. Upgrade to continue.`,
+    });
+  }
+}
 
-    if (path.includes("feedback")) {
-      if (usage.feedbacksGenerated >= plan.maxFeedbacks) {
-        return res.status(403).json({
-          message: `You've reached the feedback limit for your ${plan.name} plan. Upgrade to continue.`,
-        });
-      }
-    }
+if (path.includes("feedback")) {
+  if (usage.feedbacksGenerated >= plan.maxFeedbacks) {
+    return res.status(403).json({
+      success: false,
+      error: `You've reached the feedback limit for your ${plan.name} plan. Upgrade to continue.`,
+    });
+  }
+}
+
 
     next();
   } catch (error) {

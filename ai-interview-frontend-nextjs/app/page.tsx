@@ -5,6 +5,7 @@ import { Brain, Sparkles, Mic, Bot } from "lucide-react";
 import dynamic from "next/dynamic";
 import { useMemo } from "react";
 import Link from "next/link";
+import { toast } from "react-toastify";
 
 // ✅ Lazy-load heavy components for faster initial page render
 const Header = dynamic(() => import("./components/Header"));
@@ -189,7 +190,7 @@ export default function Home() {
 
 
       {/* 💰 PRICING SECTION */}
-      <Pricing onSelectPlan={(plan) => console.log("Selected:", plan)} />
+      <Pricing onSelectPlan={(plan) => toast.info(`Selected: ${plan}`)} />
 
 
       {/* 🌟 CTA SECTION */}

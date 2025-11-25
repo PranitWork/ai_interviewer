@@ -63,7 +63,6 @@ const dispatch = useAppDispatch();
   // 🔹 Handle Google Login
   const handleGoogleSuccess = async (credentialResponse: any) => {
     const credential = credentialResponse?.credential;
-    console.log(credential,"google")
     if (!credential) return toast.error("Google login failed!");
     const res: any = await dispatch(asyncGoogleLogin(credential));
     if (res.success) {

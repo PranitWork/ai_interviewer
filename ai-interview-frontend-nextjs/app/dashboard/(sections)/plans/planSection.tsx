@@ -10,7 +10,6 @@ import { useSelector } from "react-redux";
 export default function PlanSection() {
 
   const user = useSelector((state:any)=> state.authReducer.user)
-  console.log("checkout user",user)
 const router = useRouter();
   const handleSelectPlan = async (plan: string) => {
   router.push(`/checkout?plan=${plan}`);

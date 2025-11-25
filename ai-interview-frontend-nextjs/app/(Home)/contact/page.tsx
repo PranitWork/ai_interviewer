@@ -58,7 +58,6 @@ const onSubmit = async (data: ContactFormValues) => {
     const result = (actionResult as any)?.payload || actionResult;
 
     if (result?.success) {
-      console.log("Contact form result:", result);
       toast.success(result.message || "✅ Message sent successfully!");
       setSent(true);
       reset();
@@ -67,7 +66,7 @@ const onSubmit = async (data: ContactFormValues) => {
       toast.error(result?.message || "❌ Failed to send message.");
     }
   } catch (err) {
-    console.error("Contact form error:", err);
+    toast.error(`Contact form error: ${err}`);
     toast.error("⚠️ Something went wrong. Please try again later.");
   }
 };

@@ -3,6 +3,7 @@
 import { motion } from "framer-motion";
 import { CheckCircle } from "lucide-react";
 import { useSelector } from "react-redux";
+import { toast } from "react-toastify";
 
 interface PricingProps {
   onSelectPlan: (plan: string) => void;
@@ -10,7 +11,6 @@ interface PricingProps {
 
 const Pricing = ({ onSelectPlan }: PricingProps) => {
   const { plans } = useSelector((state: any) => state.planReducer);
-  console.log("plans:", plans);
 
   if (!plans || plans.length === 0) {
     return <p className="text-center text-voxy-muted mt-12">Loading plans...</p>;
@@ -70,7 +70,7 @@ const Pricing = ({ onSelectPlan }: PricingProps) => {
           const extras = planExtras[key];
 
           if (!extras) {
-            console.warn("No extras found for plan:", plan.name);
+            toast.error("No extras found for plan:", plan.name);
             return null;
           }
 

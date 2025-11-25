@@ -11,9 +11,9 @@ export const asyncgetPlans = () => async (dispatch: AppDispatch) => {
       dispatch(setPlans(data.plans));  // ⬅ your backend must return {success, plans: [...] }
       return { success: true };
     }
-
     return { success: false, message: data.message };
   } catch (error) {
+
     return { success: false, message: "Failed to fetch plans" };
   }
 };

@@ -75,7 +75,7 @@ Guidelines:
 
     res.json(interview);
   } catch (error) {
-    res.status(500).json({ message: "Failed to start interview" });
+    res.status(500).json({ message: `Failed to start interview${error}` });
   }
 };
 

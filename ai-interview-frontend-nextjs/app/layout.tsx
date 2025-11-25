@@ -10,6 +10,7 @@ import { DarkLight } from "./components/DarkLightMood/DarkLight";
 
 import { Analytics } from "@vercel/analytics/next"
 import { SpeedInsights } from "@vercel/speed-insights/next"
+import FirstVisitPopup from "./components/FirstVisitPopUp";
 
 const geistSans = Geist({
   variable: "--font-geist-sans",
@@ -53,6 +54,7 @@ export default function RootLayout({
             <Analytics/>
             <SpeedInsights/>
             {children}
+             <FirstVisitPopup />
           </GoogleOAuthProvider>
         </StoreProvider>
       </body>
