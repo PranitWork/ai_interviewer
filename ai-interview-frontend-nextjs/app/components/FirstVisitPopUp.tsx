@@ -1,16 +1,12 @@
 "use client";
 
-import { useEffect, useState, useRef } from "react";
+import { useEffect, useState } from "react";
 import { motion } from "framer-motion";
 
 const STORAGE_KEY = "voxy_first_visit";
 
 export default function FirstVisitPopup() {
   const [open, setOpen] = useState(false);
-
-  // ✅ FIX: Strong typing ensures .focus() always exists
-const closeRef = useRef<HTMLButtonElement | null>(null) as React.MutableRefObject<HTMLButtonElement | null>;
-
 
   // Show popup only on first visit
   useEffect(() => {
@@ -21,13 +17,6 @@ const closeRef = useRef<HTMLButtonElement | null>(null) as React.MutableRefObjec
       setOpen(true);
     }
   }, []);
-
-  // Auto-focus close button
-  useEffect(() => {
-    if (open) {
-      closeRef.current?.focus(); // ✅ No build error
-    }
-  }, [open]);
 
   const closePopup = () => {
     if (typeof window !== "undefined") {
@@ -58,15 +47,13 @@ const closeRef = useRef<HTMLButtonElement | null>(null) as React.MutableRefObjec
         animate={{ opacity: 1, y: 0, scale: 1 }}
         transition={{ duration: 0.25 }}
         className="relative z-10 max-w-md w-full bg-voxy-surface/95 
-        border border-voxy-border rounded-2xl p-7 
-        shadow-[0_0_40px_rgba(0,0,0,0.5)]"
+        border border-voxy-border rounded-2xl p-7 shadow-[0_0_40px_rgba(0,0,0,0.5)]"
         onClick={(e) => e.stopPropagation()}
       >
         <div className="flex items-start gap-4">
           
-          {/* Icon */}
-          <div className="h-12 w-12 flex items-center justify-center rounded-xl 
-          bg-voxy-primary/15 border border-voxy-border">
+          {/* ICON */}
+          <div className="h-12 w-12 flex items-center justify-center rounded-xl bg-voxy-primary/15 border border-voxy-border">
             <svg
               className="h-6 w-6 text-voxy-primary"
               fill="none"
@@ -78,7 +65,7 @@ const closeRef = useRef<HTMLButtonElement | null>(null) as React.MutableRefObjec
             </svg>
           </div>
 
-          {/* Content */}
+          {/* CONTENT */}
           <div className="flex-1">
             <h2 className="text-lg font-semibold text-voxy-text">
               Welcome to SwarAI 👋
@@ -86,18 +73,14 @@ const closeRef = useRef<HTMLButtonElement | null>(null) as React.MutableRefObjec
 
             <p className="text-sm text-voxy-muted mt-2 leading-relaxed">
               You're accessing the{" "}
-              <span className="text-voxy-primary font-semibold">
-                Beta Version
-              </span>{" "}
-              of SwarAI. Some features may be limited while we continue improving.
+              <span className="text-voxy-primary font-semibold">Beta Version</span> of SwarAI.
             </p>
 
             <p className="text-sm text-voxy-muted mt-3 leading-relaxed">
-              Your experience and feedback matter! Explore SwarAI and share suggestions
-              — it helps us shape an even better AI experience. Enjoy 🚀
+              Explore SwarAI and share your suggestions — it helps us improve. 🚀
             </p>
 
-            {/* Buttons */}
+            {/* BUTTONS */}
             <div className="mt-5 flex gap-3">
               <a
                 href="/features"
@@ -109,7 +92,6 @@ const closeRef = useRef<HTMLButtonElement | null>(null) as React.MutableRefObjec
               </a>
 
               <button
-                ref={closeRef}
                 onClick={closePopup}
                 className="px-3 py-2 rounded-md border border-voxy-border 
                 text-voxy-muted text-sm hover:text-voxy-text transition"
@@ -119,7 +101,7 @@ const closeRef = useRef<HTMLButtonElement | null>(null) as React.MutableRefObjec
             </div>
           </div>
 
-          {/* Close Icon */}
+          {/* CLOSE ICON */}
           <button
             onClick={closePopup}
             className="p-2 text-voxy-muted hover:text-voxy-text transition"
