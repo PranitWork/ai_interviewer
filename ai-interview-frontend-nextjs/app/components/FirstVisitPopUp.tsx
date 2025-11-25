@@ -7,26 +7,29 @@ const STORAGE_KEY = "voxy_first_visit";
 
 export default function FirstVisitPopup() {
   const [open, setOpen] = useState(false);
-    const closeRef = useRef<HTMLButtonElement | null>(null);
+  const closeRef = useRef<HTMLButtonElement | null>(null);
 
+  // Show popup only on first visit
   useEffect(() => {
+    if (typeof window === "undefined") return;
+
     const seen = localStorage.getItem(STORAGE_KEY);
     if (!seen) {
       setOpen(true);
     }
   }, []);
 
-
-
-useEffect(() => {
-  if (open && closeRef.current) {
-    closeRef.current.focus();
-  }
-}, [open]);
-
+  // Auto-focus close button when popup opens
+  useEffect(() => {
+    if (open && closeRef.current) {
+      closeRef.current.focus();
+    }
+  }, [open]);
 
   const closePopup = () => {
-    localStorage.setItem(STORAGE_KEY, "true");
+    if (typeof window !== "undefined") {
+      localStorage.setItem(STORAGE_KEY, "true");
+    }
     setOpen(false);
   };
 
@@ -55,7 +58,7 @@ useEffect(() => {
         onClick={(e) => e.stopPropagation()}
       >
         <div className="flex items-start gap-4">
-          {/* Icon Box */}
+          {/* ICON */}
           <div className="h-12 w-12 flex items-center justify-center rounded-xl bg-voxy-primary/15 border border-voxy-border">
             <svg
               className="h-6 w-6 text-voxy-primary"
@@ -69,42 +72,43 @@ useEffect(() => {
           </div>
 
           {/* CONTENT */}
-       <div className="flex-1">
-  <h2 className="text-lg font-semibold text-voxy-text">
-    Welcome to SwarAI 👋
-  </h2>
+          <div className="flex-1">
+            <h2 className="text-lg font-semibold text-voxy-text">
+              Welcome to SwarAI 👋
+            </h2>
 
-  <p className="text-sm text-voxy-muted mt-2 leading-relaxed">
-    You're accessing the <span className="text-voxy-primary font-semibold">Beta Version</span> of SwarAI.
-    Some features may be limited or locked while we continue improving the platform.
-  </p>
+            <p className="text-sm text-voxy-muted mt-2 leading-relaxed">
+              You're accessing the{" "}
+              <span className="text-voxy-primary font-semibold">Beta Version</span>
+              {" "}of SwarAI. Some features may be limited or locked while we continue
+              improving the platform.
+            </p>
 
-  <p className="text-sm text-voxy-muted mt-3 leading-relaxed">
-    Your experience and feedback matter!  
-    Please explore SwarAI and share your suggestions — it will truly help us shape the best AI experience for you.
-    Thank you for your support. Enjoy! 🚀
-  </p>
+            <p className="text-sm text-voxy-muted mt-3 leading-relaxed">
+              Your experience and feedback matter! Please explore SwarAI and share
+              suggestions — it truly helps us shape the best AI experience for you.
+              Enjoy! 🚀
+            </p>
 
-  {/* BUTTONS */}
-  <div className="mt-5 flex gap-3">
-    <a
-      href="/features"
-      className="px-4 py-2 rounded-md bg-voxy-primary text-white text-sm font-semibold hover:brightness-95 transition"
-      onClick={closePopup}
-    >
-      Explore Features
-    </a>
+            {/* BUTTONS */}
+            <div className="mt-5 flex gap-3">
+              <a
+                href="/features"
+                className="px-4 py-2 rounded-md bg-voxy-primary text-white text-sm font-semibold hover:brightness-95 transition"
+                onClick={closePopup}
+              >
+                Explore Features
+              </a>
 
-    <button
-      ref={closeRef}
-      onClick={closePopup}
-      className="px-3 py-2 rounded-md border border-voxy-border text-voxy-muted text-sm hover:text-voxy-text transition"
-    >
-      Close
-    </button>
-  </div>
-</div>
-
+              <button
+                ref={closeRef}
+                onClick={closePopup}
+                className="px-3 py-2 rounded-md border border-voxy-border text-voxy-muted text-sm hover:text-voxy-text transition"
+              >
+                Close
+              </button>
+            </div>
+          </div>
 
           {/* CLOSE ICON */}
           <button
