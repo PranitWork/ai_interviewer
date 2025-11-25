@@ -26,8 +26,8 @@ const subscriptionSchema = new mongoose.Schema(
     billingEmail: String,
 
     couponCode: String,
-    discountAmount: { type: Number, default: 0 }, // ₹
-    finalPrice: Number, // ₹ after discount
+    discountAmount: { type: Number, default: 0 }, 
+    finalPrice: Number, 
   },
   { timestamps: true }
 );

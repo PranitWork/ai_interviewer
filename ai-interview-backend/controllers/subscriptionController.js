@@ -75,7 +75,7 @@ export const createCheckoutSession = async (req, res) => {
     });
 
     // Create a pending subscription record
-    await Subscription.create({
+    const sub = await Subscription.create({
       user: req.user._id,
       plan,
       razorpayOrderId: order.id,
@@ -86,6 +86,7 @@ export const createCheckoutSession = async (req, res) => {
       discountAmount: discountAmountPaise, // store paise
       finalPricePaise: pricePaise, // store paise
     });
+    console.log(`subscription details ${sub}`)
 
     return res.json({
       success: true,
