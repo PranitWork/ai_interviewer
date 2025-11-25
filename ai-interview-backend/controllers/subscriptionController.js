@@ -1,58 +1,70 @@
+// controllers/subscriptionController.js
 import Razorpay from "razorpay";
 import crypto from "crypto";
 import Plan from "../models/Plan.js";
 import Subscription from "../models/Subscription.js";
 import User from "../models/User.js";
-import Coupon from "../models/Coupan.js";
+import Coupon from "../models/Coupan.js"; // FIXED filename
 
 const razorpay = new Razorpay({
   key_id: process.env.RAZORPAY_KEY_ID,
   key_secret: process.env.RAZORPAY_KEY_SECRET,
 });
 
-// ✔️ Create Checkout Session
+// Helper: safe compare hex strings
+function safeCompareHex(a, b) {
+  try {
+    const bufA = Buffer.from(a, "hex");
+    const bufB = Buffer.from(b, "hex");
+    if (bufA.length !== bufB.length) return false;
+    return crypto.timingSafeEqual(bufA, bufB);
+  } catch (err) {
+    return false;
+  }
+}
+
+// Create Checkout Session
 export const createCheckoutSession = async (req, res) => {
   try {
     let { plan, coupon, name, email } = req.body;
     if (!plan) return res.status(400).json({ success: false, message: "Plan required" });
 
-    plan = plan.trim().toLowerCase(); // FIX ✔
+    plan = plan.trim().toLowerCase();
     const selectedPlan = await Plan.findOne({ name: plan });
-
     if (!selectedPlan)
       return res.status(400).json({ success: false, message: "Invalid plan" });
 
-    // Price stored in ₹ in DB
-    let amount = selectedPlan.price;
-    let discountAmount = 0;
+    // PRICE UNITS: Plan.price is stored in paise (integer)
+    let pricePaise = Number(selectedPlan.price); // already paise
+    if (!Number.isInteger(pricePaise) || pricePaise <= 0)
+      return res.status(500).json({ success: false, message: "Invalid plan price" });
 
-    let couponCode = coupon ? coupon.toUpperCase() : null;
+    let discountAmountPaise = 0;
+    let couponCode = coupon ? String(coupon).trim().toUpperCase() : null;
 
     if (couponCode) {
       const couponDoc = await Coupon.findOne({ code: couponCode });
-
-      if (!couponDoc) return res.json({ success: false, message: "Invalid coupon" });
-      if (couponDoc.expiresAt < new Date()) return res.json({ success: false, message: "Coupon expired" });
+      if (!couponDoc) return res.status(400).json({ success: false, message: "Invalid coupon" });
+      if (new Date(couponDoc.expiresAt) < new Date()) return res.status(400).json({ success: false, message: "Coupon expired" });
       if (couponDoc.usedCount >= couponDoc.maxUses)
-        return res.json({ success: false, message: "Coupon usage limit reached" });
+        return res.status(400).json({ success: false, message: "Coupon usage limit reached" });
 
-      discountAmount = Math.round((amount * couponDoc.discountPercent) / 100);
-      amount -= discountAmount;
+      // discount in paise (integer)
+      discountAmountPaise = Math.round((pricePaise * couponDoc.discountPercent) / 100);
+      pricePaise = pricePaise - discountAmountPaise;
     }
 
-    if (amount <= 0) return res.json({ success: false, message: "Invalid final amount" });
+    if (pricePaise <= 0) return res.status(400).json({ success: false, message: "Invalid final amount" });
 
-    // Convert to paise
-    const amountPaise = amount * 100;
-
-    // Expire existing active subscriptions
+    // Expire existing active subscriptions for this user
     await Subscription.updateMany(
       { user: req.user._id, status: "active" },
-      { status: "expired" }
+      { $set: { status: "expired" } }
     );
 
+    // Create Razorpay order (Razorpay expects amount in paise)
     const order = await razorpay.orders.create({
-      amount: amountPaise,
+      amount: pricePaise,
       currency: "INR",
       receipt: "rcpt_" + Date.now(),
       notes: {
@@ -62,6 +74,7 @@ export const createCheckoutSession = async (req, res) => {
       },
     });
 
+    // Create a pending subscription record
     await Subscription.create({
       user: req.user._id,
       plan,
@@ -70,51 +83,64 @@ export const createCheckoutSession = async (req, res) => {
       billingName: name,
       billingEmail: email,
       couponCode,
-      discountAmount,
-      finalPrice: amount,
+      discountAmount: discountAmountPaise, // store paise
+      finalPricePaise: pricePaise, // store paise
     });
 
     return res.json({
       success: true,
       id: order.id,
-      amount: amountPaise,
+      amount: pricePaise,
       currency: "INR",
       key: process.env.RAZORPAY_KEY_ID,
     });
   } catch (e) {
+    console.error("createCheckoutSession error:", e);
     return res.status(500).json({ success: false, message: "Server error" });
   }
 };
+
+// Webhook handler (route must use express.raw({ type: "application/json" }))
 export const handleWebhook = async (req, res) => {
   try {
     const signature = req.headers["x-razorpay-signature"];
     const secret = process.env.RAZORPAY_WEBHOOK_SECRET;
-    const body = JSON.stringify(req.body);
+    if (!signature || !secret) {
+      console.warn("Missing signature or webhook secret");
+      return res.status(400).json({ success: false, message: "Bad request" });
+    }
+
+    // IMPORTANT: req.body is raw Buffer because route uses express.raw
+    const body = req.body instanceof Buffer ? req.body.toString("utf8") : JSON.stringify(req.body);
 
     const expected = crypto.createHmac("sha256", secret).update(body).digest("hex");
-    if (expected !== signature)
+    if (!safeCompareHex(expected, signature)) {
+      console.warn("Invalid webhook signature");
       return res.status(400).json({ success: false, message: "Invalid signature" });
+    }
 
     const event = req.body.event;
-    const payment = req.body.payload?.payment?.entity;
+    const payload = req.body.payload || {};
+    const payment = payload.payment ? payload.payment.entity : null;
 
-    // PAYMENT SUCCESS
+    // PAYMENT CAPTURED / SUCCESS (handle only if order_id exists)
     if (event === "payment.captured" && payment?.order_id) {
-      const subscription = await Subscription.findOne({
-        razorpayOrderId: payment.order_id,
-      });
-
-      if (!subscription) return res.json({ success: true });
+      const subscription = await Subscription.findOne({ razorpayOrderId: payment.order_id });
+      if (!subscription) {
+        // nothing to do
+        return res.json({ success: true });
+      }
 
       const planDetails = await Plan.findOne({ name: subscription.plan });
-      const duration = planDetails?.durationDays || 30;
+      const durationDays = planDetails?.durationDays || 30;
+      const now = new Date();
 
       subscription.razorpayPaymentId = payment.id;
       subscription.status = "active";
-      subscription.currentPeriodEnd = new Date(Date.now() + duration * 86400000);
+      subscription.currentPeriodEnd = new Date(now.getTime() + durationDays * 24 * 60 * 60 * 1000);
       await subscription.save();
 
-      // Apply coupon
+      // Apply coupon usage (atomic increment)
       if (subscription.couponCode) {
         await Coupon.findOneAndUpdate(
           { code: subscription.couponCode },
@@ -122,7 +148,7 @@ export const handleWebhook = async (req, res) => {
         );
       }
 
-      // UPDATE USER PLAN NOW — FIXED 🔥
+      // Update user plan and reset usage counters
       await User.findByIdAndUpdate(subscription.user, {
         plan: subscription.plan,
         planExpiresAt: subscription.currentPeriodEnd,
@@ -145,21 +171,23 @@ export const handleWebhook = async (req, res) => {
       );
     }
 
+    // Handle other events as needed...
     return res.json({ success: true });
   } catch (err) {
-    res.status(500).json({ success: false });
+    console.error("Webhook handler error:", err);
+    return res.status(500).json({ success: false });
   }
 };
+
 export const getSubscriptionStatus = async (req, res) => {
   try {
-    const subscription = await Subscription.findOne({ user: req.user._id })
-      .sort({ createdAt: -1 });
+    const subscription = await Subscription.findOne({ user: req.user._id }).sort({ createdAt: -1 });
 
     if (!subscription)
       return res.json({ success: true, plan: "free", status: "inactive", expiry: null });
 
-    // Auto expire
-    if (subscription.currentPeriodEnd < new Date() && subscription.status === "active") {
+    // Auto-expire if past currentPeriodEnd
+    if (subscription.currentPeriodEnd && subscription.currentPeriodEnd < new Date() && subscription.status === "active") {
       subscription.status = "expired";
       await subscription.save();
 
@@ -168,6 +196,8 @@ export const getSubscriptionStatus = async (req, res) => {
         planExpiresAt: null,
         subscriptionId: null,
       });
+
+      return res.json({ success: true, plan: "free", status: "expired", expiry: null });
     }
 
     res.json({
@@ -177,6 +207,7 @@ export const getSubscriptionStatus = async (req, res) => {
       expiry: subscription.currentPeriodEnd,
     });
   } catch (e) {
+    console.error("getSubscriptionStatus error:", e);
     res.status(500).json({ success: false });
   }
 };
@@ -204,6 +235,7 @@ export const cancelSubscription = async (req, res) => {
 
     res.json({ success: true, message: "Subscription canceled" });
   } catch (e) {
+    console.error("cancelSubscription error:", e);
     res.status(500).json({ success: false });
   }
 };
