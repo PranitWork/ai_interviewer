@@ -33,7 +33,6 @@ export default function FirstVisitPopup() {
       role="dialog"
       aria-modal="true"
     >
-      {/* BACKDROP */}
       <motion.div
         initial={{ opacity: 0 }}
         animate={{ opacity: 0.6 }}
@@ -41,7 +40,6 @@ export default function FirstVisitPopup() {
         onClick={closePopup}
       />
 
-      {/* POPUP CARD */}
       <motion.div
         initial={{ opacity: 0, y: 25, scale: 0.97 }}
         animate={{ opacity: 1, y: 0, scale: 1 }}
@@ -50,7 +48,6 @@ export default function FirstVisitPopup() {
         onClick={(e) => e.stopPropagation()}
       >
         <div className="flex items-start gap-4">
-          {/* ICON */}
           <div className="h-12 w-12 flex items-center justify-center rounded-xl bg-voxy-primary/15 border border-voxy-border">
             <svg
               className="h-6 w-6 text-voxy-primary"
@@ -63,7 +60,6 @@ export default function FirstVisitPopup() {
             </svg>
           </div>
 
-          {/* CONTENT */} 
           <div className="flex-1">
             <h2 className="text-lg font-semibold text-voxy-text">
               Welcome to SwarAI 👋
@@ -101,7 +97,6 @@ export default function FirstVisitPopup() {
             </div>
           </div>
 
-          {/* CLOSE ICON */}
           <button
             onClick={closePopup}
             className="p-2 text-voxy-muted hover:text-voxy-text transition"
