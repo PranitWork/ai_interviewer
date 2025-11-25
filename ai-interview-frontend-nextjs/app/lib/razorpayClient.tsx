@@ -11,7 +11,7 @@ export const openRazorpayCheckout = (order: any) => {
 
     handler: function (response: any) {
       console.log("Payment Success:", response);
-      window.location.href = "/checkout/success";
+      window.location.href = "/checkout/processing";
     },
 
     modal: {
