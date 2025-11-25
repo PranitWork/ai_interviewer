@@ -7,7 +7,9 @@ const STORAGE_KEY = "voxy_first_visit";
 
 export default function FirstVisitPopup() {
   const [open, setOpen] = useState(false);
-  const closeRef = useRef<HTMLButtonElement | null>(null);
+
+  // ✅ FIX: Strong typing ensures .focus() always exists
+  const closeRef = useRef<HTMLButtonElement>(null!);
 
   // Show popup only on first visit
   useEffect(() => {
@@ -19,10 +21,10 @@ export default function FirstVisitPopup() {
     }
   }, []);
 
-  // Auto-focus close button when popup opens
+  // Auto-focus close button
   useEffect(() => {
-    if (open && closeRef.current) {
-      closeRef.current.focus();
+    if (open) {
+      closeRef.current?.focus(); // ✅ No build error
     }
   }, [open]);
 
@@ -54,12 +56,16 @@ export default function FirstVisitPopup() {
         initial={{ opacity: 0, y: 25, scale: 0.97 }}
         animate={{ opacity: 1, y: 0, scale: 1 }}
         transition={{ duration: 0.25 }}
-        className="relative z-10 max-w-md w-full bg-voxy-surface/95 border border-voxy-border rounded-2xl p-7 shadow-[0_0_40px_rgba(0,0,0,0.5)]"
+        className="relative z-10 max-w-md w-full bg-voxy-surface/95 
+        border border-voxy-border rounded-2xl p-7 
+        shadow-[0_0_40px_rgba(0,0,0,0.5)]"
         onClick={(e) => e.stopPropagation()}
       >
         <div className="flex items-start gap-4">
-          {/* ICON */}
-          <div className="h-12 w-12 flex items-center justify-center rounded-xl bg-voxy-primary/15 border border-voxy-border">
+          
+          {/* Icon */}
+          <div className="h-12 w-12 flex items-center justify-center rounded-xl 
+          bg-voxy-primary/15 border border-voxy-border">
             <svg
               className="h-6 w-6 text-voxy-primary"
               fill="none"
@@ -71,7 +77,7 @@ export default function FirstVisitPopup() {
             </svg>
           </div>
 
-          {/* CONTENT */}
+          {/* Content */}
           <div className="flex-1">
             <h2 className="text-lg font-semibold text-voxy-text">
               Welcome to SwarAI 👋
@@ -79,22 +85,23 @@ export default function FirstVisitPopup() {
 
             <p className="text-sm text-voxy-muted mt-2 leading-relaxed">
               You're accessing the{" "}
-              <span className="text-voxy-primary font-semibold">Beta Version</span>
-              {" "}of SwarAI. Some features may be limited or locked while we continue
-              improving the platform.
+              <span className="text-voxy-primary font-semibold">
+                Beta Version
+              </span>{" "}
+              of SwarAI. Some features may be limited while we continue improving.
             </p>
 
             <p className="text-sm text-voxy-muted mt-3 leading-relaxed">
-              Your experience and feedback matter! Please explore SwarAI and share
-              suggestions — it truly helps us shape the best AI experience for you.
-              Enjoy! 🚀
+              Your experience and feedback matter! Explore SwarAI and share suggestions
+              — it helps us shape an even better AI experience. Enjoy 🚀
             </p>
 
-            {/* BUTTONS */}
+            {/* Buttons */}
             <div className="mt-5 flex gap-3">
               <a
                 href="/features"
-                className="px-4 py-2 rounded-md bg-voxy-primary text-white text-sm font-semibold hover:brightness-95 transition"
+                className="px-4 py-2 rounded-md bg-voxy-primary text-white text-sm 
+                font-semibold hover:brightness-95 transition"
                 onClick={closePopup}
               >
                 Explore Features
@@ -103,14 +110,15 @@ export default function FirstVisitPopup() {
               <button
                 ref={closeRef}
                 onClick={closePopup}
-                className="px-3 py-2 rounded-md border border-voxy-border text-voxy-muted text-sm hover:text-voxy-text transition"
+                className="px-3 py-2 rounded-md border border-voxy-border 
+                text-voxy-muted text-sm hover:text-voxy-text transition"
               >
                 Close
               </button>
             </div>
           </div>
 
-          {/* CLOSE ICON */}
+          {/* Close Icon */}
           <button
             onClick={closePopup}
             className="p-2 text-voxy-muted hover:text-voxy-text transition"
