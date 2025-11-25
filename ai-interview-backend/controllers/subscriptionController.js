@@ -143,7 +143,7 @@ console.log("EXPECTED:", expected);
       subscription.status = "active";
       subscription.currentPeriodEnd = new Date(now.getTime() + durationDays * 24 * 60 * 60 * 1000);
       await subscription.save();
-
+      console.log(subscription)
       // Apply coupon usage (atomic increment)
       if (subscription.couponCode) {
         await Coupon.findOneAndUpdate(

@@ -9,7 +9,7 @@ import { protect } from "../middleware/authMiddleware.js";
 
 const router = express.Router();
 
-app.post(
+router.post(
   "/api/subscription/webhook",
   express.raw({ type: "application/json" }),
   handleWebhook
