@@ -46,12 +46,10 @@ export default function FirstVisitPopup() {
         initial={{ opacity: 0, y: 25, scale: 0.97 }}
         animate={{ opacity: 1, y: 0, scale: 1 }}
         transition={{ duration: 0.25 }}
-        className="relative z-10 max-w-md w-full bg-voxy-surface/95 
-        border border-voxy-border rounded-2xl p-7 shadow-[0_0_40px_rgba(0,0,0,0.5)]"
+        className="relative z-10 max-w-md w-full bg-voxy-surface/95 border border-voxy-border rounded-2xl p-7 shadow-[0_0_40px_rgba(0,0,0,0.5)]"
         onClick={(e) => e.stopPropagation()}
       >
         <div className="flex items-start gap-4">
-          
           {/* ICON */}
           <div className="h-12 w-12 flex items-center justify-center rounded-xl bg-voxy-primary/15 border border-voxy-border">
             <svg
@@ -73,19 +71,22 @@ export default function FirstVisitPopup() {
 
             <p className="text-sm text-voxy-muted mt-2 leading-relaxed">
               You're accessing the{" "}
-              <span className="text-voxy-primary font-semibold">Beta Version</span> of SwarAI.
+              <span className="text-voxy-primary font-semibold">Beta Version</span>{" "}
+              of SwarAI. Some features may be limited or locked while we continue
+              improving the platform.
             </p>
 
             <p className="text-sm text-voxy-muted mt-3 leading-relaxed">
-              Explore SwarAI and share your suggestions — it helps us improve. 🚀
+              Your experience and feedback matter! Please explore SwarAI and share
+              suggestions — it truly helps us shape the best AI experience for you.
+              Enjoy! 🚀
             </p>
 
             {/* BUTTONS */}
             <div className="mt-5 flex gap-3">
               <a
                 href="/features"
-                className="px-4 py-2 rounded-md bg-voxy-primary text-white text-sm 
-                font-semibold hover:brightness-95 transition"
+                className="px-4 py-2 rounded-md bg-voxy-primary text-white text-sm font-semibold hover:brightness-95 transition"
                 onClick={closePopup}
               >
                 Explore Features
@@ -93,8 +94,7 @@ export default function FirstVisitPopup() {
 
               <button
                 onClick={closePopup}
-                className="px-3 py-2 rounded-md border border-voxy-border 
-                text-voxy-muted text-sm hover:text-voxy-text transition"
+                className="px-3 py-2 rounded-md border border-voxy-border text-voxy-muted text-sm hover:text-voxy-text transition"
               >
                 Close
               </button>
