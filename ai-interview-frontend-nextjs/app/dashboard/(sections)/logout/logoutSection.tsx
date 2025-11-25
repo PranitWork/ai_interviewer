@@ -25,6 +25,9 @@ export default function LogoutSection() {
   const dispatch = useAppDispatch();
 
   // ✅ Grab userProfile from Redux
+  const subscriptiondata = useSelector(
+      (state: any) => state.analyticsReducer.userAnalytics
+    );
   const userProfile = useSelector((state: any) => state.authReducer.user);
  const createdDate = new Date(userProfile?.createdAt).toLocaleString("en-IN", {
   day: "2-digit",
@@ -34,7 +37,6 @@ export default function LogoutSection() {
   minute: "2-digit",
   hour12: true,
 });
-
 const user = {
   name: userProfile?.name || "Unknown User",
   email: userProfile?.email || "N/A",
@@ -106,7 +108,7 @@ const user = {
               <Shield size={16} />
               <span>Plan:</span>
               <span className="font-semibold text-voxy-primary capitalize">
-                {user.plan}
+                {subscriptiondata?.currentPlan?.toUpperCase?.() ?? "FREE"}
               </span>
             </div>
           </div>

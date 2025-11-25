@@ -27,7 +27,11 @@ export default function ReportsSection() {
         <div className="bg-voxy-surface/70 border border-voxy-border rounded-2xl p-6 backdrop-blur-md shadow-lg">
           <FeedbackReportCard />
         </div>
+
+
       </motion.div>
+  
+    
     </ProtectedRoute>
   );
 }

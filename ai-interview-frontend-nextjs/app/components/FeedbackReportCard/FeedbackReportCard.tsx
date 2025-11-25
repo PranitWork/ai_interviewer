@@ -1,8 +1,8 @@
 "use client";
 
 import { useEffect, useState } from "react";
-import { useDispatch, useSelector } from "react-redux";
-import { AppDispatch, RootState } from "@/app/Store/Store";
+import {  useSelector } from "react-redux";
+import {  RootState } from "@/app/Store/Store";
 import { asyncGetAllFeedbacks } from "@/app/Store/actions/feedbackAction";
 import { motion, AnimatePresence } from "framer-motion";
 import {
@@ -42,6 +42,7 @@ export default function FeedbackReportCard() {
   const [selectedReport, setSelectedReport] = useState<FeedbackItem | null>(
     null
   );
+
   const [loading, setLoading] = useState(false);
 
   useEffect(() => {
@@ -110,7 +111,7 @@ export default function FeedbackReportCard() {
         {selectedReport && (
           <motion.div
             key="feedback-modal"
-            className="fixed inset-0 z-[999] flex items-center justify-center bg-black/70 backdrop-blur-md p-4"
+            className="fixed inset-0 z-[999] md:mt-25 flex items-center justify-center bg-black/70 backdrop-blur-md p-4"
             initial={{ opacity: 0 }}
             animate={{ opacity: 1 }}
             exit={{ opacity: 0 }}
