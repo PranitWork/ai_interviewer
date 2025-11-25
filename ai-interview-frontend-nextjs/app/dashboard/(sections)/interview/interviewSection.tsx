@@ -130,7 +130,7 @@ export default function InterviewSection() {
 
         window.speechSynthesis.speak(u);
       } catch (err) {
-        toast.error("speakQuestion error:", err);
+        toast.error("speakQuestion error:");
       }
     },
     [cancelSpeaking] // startRecognition, stopRecognition defined later but hoisted
