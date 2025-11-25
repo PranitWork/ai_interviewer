@@ -88,23 +88,53 @@ export const createCheckoutSession = async (req, res) => {
   }
 };
 
+
 export const handleWebhook = async (req, res) => {
   try {
     const secret = process.env.RAZORPAY_WEBHOOK_SECRET;
     const signature = req.headers["x-razorpay-signature"];
-    const body = JSON.stringify(req.body);
 
-    const expected = crypto.createHmac("sha256", secret).update(body).digest("hex");
+    // IMPORTANT: when you used express.raw({ type: "application/json" }) in the route,
+    // req.body is a Buffer. Use its raw string for HMAC verification.
+    const rawBody =
+      req.body instanceof Buffer
+        ? req.body.toString("utf8")
+        : typeof req.body === "string"
+        ? req.body
+        : JSON.stringify(req.body);
+
+    // Verify signature
+    const expected = crypto
+      .createHmac("sha256", secret)
+      .update(rawBody)
+      .digest("hex");
+
     if (signature !== expected) {
+      console.warn("Webhook signature mismatch", { signature, expected });
       return res.status(400).json({ success: false, message: "Invalid signature" });
     }
 
-    const event = req.body.event;
-    const payment = req.body.payload?.payment?.entity;
+    const parsed = JSON.parse(rawBody);
+    const event = parsed.event;
+    const payment = parsed.payload?.payment?.entity;
+
+    // Some events might have order inside payload.order.entity
+    const orderId =
+      payment?.order_id || parsed.payload?.order?.entity?.id || null;
+
+    console.log("Webhook event received:", event, "orderId:", orderId);
 
     if (event === "payment.captured") {
-      const sub = await Subscription.findOne({ razorpayOrderId: payment.order_id });
-      if (!sub) return res.json({ success: true });
+      if (!payment) {
+        console.warn("payment.captured but no payment entity");
+        return res.json({ success: true });
+      }
+
+      const sub = await Subscription.findOne({ razorpayOrderId: orderId });
+      if (!sub) {
+        console.log("No subscription found for order:", orderId);
+        return res.json({ success: true });
+      }
 
       const planDetails = await Plan.findOne({ name: sub.plan });
       const duration = planDetails?.durationDays || 30;
@@ -128,20 +158,34 @@ export const handleWebhook = async (req, res) => {
           feedbacksGenerated: 0,
         },
       });
+
+      console.log("Subscription activated for user:", sub.user.toString());
     }
 
     if (event === "payment.failed") {
+      // payment may be undefined but we try to update by order id
       await Subscription.findOneAndUpdate(
-        { razorpayOrderId: payment.order_id },
-        { status: "failed" }
+        { razorpayOrderId: orderId },
+        {
+          $set: {
+            status: "failed",
+            razorpayPaymentId: payment?.id || null,
+          },
+        }
       );
+
+      console.log("Marked subscription failed for order:", orderId);
     }
 
-    res.json({ success: true });
-  } catch {
-    res.status(500).json({ success: false });
+    // You can handle other events here (order.paid, subscription.charged, etc.)
+
+    return res.json({ success: true });
+  } catch (err) {
+    console.error("Webhook handler error:", err);
+    return res.status(500).json({ success: false });
   }
 };
+
 
 export const getSubscriptionStatus = async (req, res) => {
   try {
