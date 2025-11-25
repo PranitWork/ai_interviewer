@@ -69,13 +69,7 @@ const router = useRouter();
         : "No expiry"}</span>
           </div>
 
-          <motion.button
-            whileHover={{ scale: 1.05 }}
-            whileTap={{ scale: 0.97 }}
-            className="mt-6 px-6 py-3 rounded-lg font-semibold text-voxy-text bg-gradient-to-r from-voxy-primary to-voxy-secondary shadow-md hover:opacity-90 transition"
-          >
-            Manage Plan
-          </motion.button>
+         
         </motion.div>
 
         <Pricing onSelectPlan={handleSelectPlan} />

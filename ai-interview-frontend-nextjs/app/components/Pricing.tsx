@@ -35,7 +35,7 @@ const Pricing = ({ onSelectPlan }: PricingProps) => {
       desc: "Perfect for serious job seekers who want detailed insights and unlimited practice.",
       highlight: true,
       features: [
-        "Unlimited AI interview sessions",
+        "200 AI interview sessions",
         "Instant feedback with scoring & suggestions",
         "Comprehensive post-interview summary report",
         "Full analytics dashboard",
@@ -49,7 +49,7 @@ const Pricing = ({ onSelectPlan }: PricingProps) => {
       displayTitle: "Advance",
       desc: "Professional-grade coaching and deep AI insights.",
       features: [
-        "All Pro features included",
+        "Unlimited AI interview sessions",
         "AI voice tone & confidence analysis",
         "Personalized AI feedback",
         "Improvement tracking with charts",
@@ -63,6 +63,7 @@ const Pricing = ({ onSelectPlan }: PricingProps) => {
 
   return (
     <section id="pricing" className="mt-32 px-6 max-w-6xl mx-auto text-center">
+      <h1 className="text-center mb-10 text-voxy-text font-bold text-2xl md:text-3xl">Monthly Plans</h1>
       <div className="grid md:grid-cols-3 gap-8">
         {plans.map((plan: any, i: number) => {
           // Normalize backend names: "Free" → "free"
