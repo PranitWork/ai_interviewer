@@ -1,9 +1,12 @@
 "use client";
 
+import Footer from "@/app/components/Footer";
+import Header from "@/app/components/Header";
+
 export default function DigitalDeliveryPolicy() {
   return (
     <div className="min-h-screen px-6 md:px-20 py-16 bg-[var(--color-voxy-bg)] text-[var(--color-voxy-text)] animate-fadeIn">
-
+      <Header/>
       {/* HEADER */}
       <div className="max-w-4xl mx-auto mb-12">
         <h1 className="text-4xl font-bold mb-3 text-[var(--color-voxy-primary)]">
@@ -115,6 +118,7 @@ export default function DigitalDeliveryPolicy() {
       </div>
 
       <div className="h-20"></div>
+      <Footer/>
     </div>
   );
 }
