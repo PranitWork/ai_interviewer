@@ -86,7 +86,6 @@ export const createCheckoutSession = async (req, res) => {
       discountAmount: discountAmountPaise, // store paise
       finalPricePaise: pricePaise, // store paise
     });
-    console.log(`subscription details ${sub}`)
 
     return res.json({
       success: true,
@@ -96,7 +95,6 @@ export const createCheckoutSession = async (req, res) => {
       key: process.env.RAZORPAY_KEY_ID,
     });
   } catch (e) {
-    console.error("createCheckoutSession error:", e);
     return res.status(500).json({ success: false, message: "Server error" });
   }
 };
@@ -127,8 +125,7 @@ export const handleWebhook = async (req, res) => {
     const payload = parsed.payload || {};
     const payment = payload.payment ? payload.payment.entity : null;
 
-    console.log("WEBHOOK EVENT:", event);
-    console.log("ORDER ID:", payment?.order_id);
+
 
     if (event === "payment.captured" && payment?.order_id) {
       const subscription = await Subscription.findOne({
@@ -136,7 +133,6 @@ export const handleWebhook = async (req, res) => {
       });
 
       if (!subscription) {
-        console.log("No matching subscription found.");
         return res.json({ success: true });
       }
 
@@ -177,7 +173,6 @@ export const handleWebhook = async (req, res) => {
 
     return res.json({ success: true });
   } catch (err) {
-    console.error("Webhook handler error:", err);
     return res.status(500).json({ success: false });
   }
 };
@@ -211,7 +206,6 @@ export const getSubscriptionStatus = async (req, res) => {
       expiry: subscription.currentPeriodEnd,
     });
   } catch (e) {
-    console.error("getSubscriptionStatus error:", e);
     res.status(500).json({ success: false });
   }
 };
@@ -239,7 +233,6 @@ export const cancelSubscription = async (req, res) => {
 
     res.json({ success: true, message: "Subscription canceled" });
   } catch (e) {
-    console.error("cancelSubscription error:", e);
     res.status(500).json({ success: false });
   }
 };
