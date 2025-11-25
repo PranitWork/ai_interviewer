@@ -1,79 +1,104 @@
 import Plan from "../models/Plan.js";
 
-// 🟢 CREATE PLAN
+// 🟢 CREATE PLAN (Price stored in Paise)
 export const createPlan = async (req, res) => {
   try {
-    const { name, price, maxInterviews, maxFeedbacks, durationDays } = req.body;
+    let { name, price, maxInterviews, maxFeedbacks, durationDays } = req.body;
 
-    // Validate
     if (!name || price == null) {
       return res.status(400).json({ message: "Name and price are required" });
     }
 
-    // Check for existing plan
+    name = name.toLowerCase();
+
     const existing = await Plan.findOne({ name });
     if (existing) {
       return res.status(400).json({ message: "Plan with this name already exists" });
     }
 
+    // 💰 Convert rupees → paise
+    const priceInPaise = Math.round(price * 100);
+
     const plan = await Plan.create({
       name,
-      price,
+      price: priceInPaise,
       maxInterviews,
       maxFeedbacks,
       durationDays,
     });
 
-    res.status(201).json({ message: "Plan created successfully", plan });
+    // 💰 Convert paise → rupees for frontend response
+    const formattedPlan = {
+      ...plan.toObject(),
+      price: plan.price / 100,
+    };
+
+    res.status(201).json({ message: "Plan created successfully", plan: formattedPlan });
   } catch (error) {
     res.status(500).json({ message: "Failed to create plan" });
   }
 };
 
+
 // 🟡 UPDATE PLAN
 export const updatePlan = async (req, res) => {
   try {
     const { id } = req.params;
-    const { name, price, maxInterviews, maxFeedbacks, durationDays } = req.body;
+    let { name, price, maxInterviews, maxFeedbacks, durationDays } = req.body;
 
-    // ✅ Find the plan
     const plan = await Plan.findById(id);
     if (!plan) return res.status(404).json({ message: "Plan not found" });
 
-    // ✅ If updating name, make sure it doesn't clash with another plan
-    if (name && name.toLowerCase() !== plan.name) {
-      const nameExists = await Plan.findOne({ name: name.toLowerCase() });
-      if (nameExists) {
-        return res
-          .status(400)
-          .json({ message: `Plan name "${name}" already exists` });
+    if (name) {
+      name = name.toLowerCase();
+      if (name !== plan.name) {
+        const exists = await Plan.findOne({ name });
+        if (exists) {
+          return res.status(400).json({ message: `Plan name "${name}" already exists` });
+        }
+        plan.name = name;
       }
-      plan.name = name.toLowerCase();
     }
 
-    // ✅ Apply only provided fields (avoid overwriting others with undefined)
-    if (price != null) plan.price = price;
+    // 💰 Convert rupees → paise when updating price
+    if (price != null) {
+      plan.price = Math.round(price * 100);
+    }
+
     if (maxInterviews != null) plan.maxInterviews = maxInterviews;
     if (maxFeedbacks != null) plan.maxFeedbacks = maxFeedbacks;
     if (durationDays != null) plan.durationDays = durationDays;
 
     await plan.save();
 
+    const formattedPlan = {
+      ...plan.toObject(),
+      price: plan.price / 100, // return in rupees
+    };
+
     res.json({
       success: true,
       message: "Plan updated successfully",
-      plan,
+      plan: formattedPlan,
     });
   } catch (error) {
     res.status(500).json({ message: "Failed to update plan" });
   }
 };
 
-// 🧾 GET ALL PLANS (optional utility)
+
+// 🧾 GET ALL PLANS (return rupees)
 export const getAllPlans = async (req, res) => {
   try {
     const plans = await Plan.find().sort({ price: 1 });
-    res.json({ success: true, plans });
+
+    // Convert each plan price paise → rupees
+    const formattedPlans = plans.map((p) => ({
+      ...p.toObject(),
+      price: p.price / 100,
+    }));
+
+    res.json({ success: true, plans: formattedPlans });
   } catch (error) {
     res.status(500).json({ success: false, message: "Failed to load plans" });
   }
