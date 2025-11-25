@@ -7,7 +7,7 @@ const STORAGE_KEY = "voxy_first_visit";
 
 export default function FirstVisitPopup() {
   const [open, setOpen] = useState(false);
-  const closeRef = useRef(null);
+    const closeRef = useRef<HTMLButtonElement | null>(null);
 
   useEffect(() => {
     const seen = localStorage.getItem(STORAGE_KEY);
@@ -16,9 +16,14 @@ export default function FirstVisitPopup() {
     }
   }, []);
 
-  useEffect(() => {
-    if (open && closeRef.current) closeRef.current.focus();
-  }, [open]);
+
+
+useEffect(() => {
+  if (open && closeRef.current) {
+    closeRef.current.focus();
+  }
+}, [open]);
+
 
   const closePopup = () => {
     localStorage.setItem(STORAGE_KEY, "true");
