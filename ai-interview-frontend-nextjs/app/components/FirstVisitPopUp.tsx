@@ -63,7 +63,7 @@ export default function FirstVisitPopup() {
             </svg>
           </div>
 
-          {/* CONTENT */}
+          {/* CONTENT */} 
           <div className="flex-1">
             <h2 className="text-lg font-semibold text-voxy-text">
               Welcome to SwarAI 👋
@@ -79,10 +79,10 @@ export default function FirstVisitPopup() {
             <p className="text-sm text-voxy-muted mt-3 leading-relaxed">
               Your experience and feedback matter! Please explore SwarAI and share
               suggestions — it truly helps us shape the best AI experience for you.
-              Enjoy! 🚀
+              Enjoy! 🚀 
             </p>
 
-            {/* BUTTONS */}
+           
             <div className="mt-5 flex gap-3">
               <a
                 href="/features"
