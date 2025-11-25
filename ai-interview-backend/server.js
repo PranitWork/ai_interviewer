@@ -15,11 +15,20 @@ import analyticsRoutes from "./routes/analyticsRoutes.js"
 import planRoutes from "./routes/planRoutes.js"
 import contactRoutes from "./routes/contactRoutes.js"
 import couponRoutes from "./routes/coupanRoutes.js"
+import { handleWebhook } from "./controllers/subscriptionController.js";
 
 dotenv.config();
 connectDB();
 
 const app = express();
+
+
+app.post(
+  "/api/subscription/webhook",
+  express.raw({ type: "application/json" }),
+  handleWebhook
+);
+
 
 const allowedOrigins = [
   "http://localhost:3000",
