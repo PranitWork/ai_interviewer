@@ -5,7 +5,9 @@ export const checkPlanLimits = async (req, res, next) => {
   try {
     const user = await User.findById(req.user._id);
     if (!user) return res.status(404).json({ message: "User not found" });
-
+if (user.role === "admin") {
+  return next();
+}
     const planName = user.plan?.trim().toLowerCase();
 
     const plan = await Plan.findOne({ name: planName });
