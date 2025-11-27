@@ -31,10 +31,6 @@ import {
 import { generateFeedback } from "@/app/Store/actions/feedbackAction";
 import FeedbackSection from "../feedbacks/feedbackSection";
 
-// 🟢 SPEECH PACKAGE
-import SpeechRecognition, { useSpeechRecognition } from "react-speech-recognition";
-
-
 /* ---------- Helpers for device & browser ---------- */
 const detectDevice = () => {
   if (typeof navigator === "undefined") return "Detecting...";
@@ -61,7 +57,94 @@ const detectBrowser = () => {
   return "Unknown Browser";
 };
 
+/* ---------- Minimal custom SpeechRecognition hook (no external lib) ---------- */
+function useBrowserSpeechRecognition() {
+  const [transcript, setTranscript] = useState("");
+  const [listening, setListening] = useState(false);
+  const [browserSupportsSpeechRecognition, setBrowserSupportsSpeechRecognition] =
+    useState(false);
 
+  const recognitionRef = useRef<any>(null);
+
+  useEffect(() => {
+    if (typeof window === "undefined") return;
+
+    const SR =
+      (window as any).SpeechRecognition || (window as any).webkitSpeechRecognition;
+
+    if (!SR) {
+      setBrowserSupportsSpeechRecognition(false);
+      return;
+    }
+
+    setBrowserSupportsSpeechRecognition(true);
+
+    const recognition = new SR();
+    recognition.continuous = true;
+    recognition.interimResults = true;
+    recognition.lang = "en-US";
+
+    recognition.onresult = (event: any) => {
+      let combined = "";
+      for (let i = event.resultIndex; i < event.results.length; i++) {
+        combined += event.results[i][0].transcript;
+      }
+      setTranscript(combined);
+    };
+
+    recognition.onend = () => {
+      setListening(false);
+    };
+
+    recognitionRef.current = recognition;
+
+    return () => {
+      try {
+        recognitionRef.current?.stop?.();
+      } catch {
+        // ignore
+      }
+      recognitionRef.current = null;
+    };
+  }, []);
+
+  const startListening = (options?: { continuous?: boolean; language?: string }) => {
+    if (!recognitionRef.current) return;
+    try {
+      if (options?.language) {
+        recognitionRef.current.lang = options.language;
+      }
+      recognitionRef.current.continuous = options?.continuous ?? true;
+      recognitionRef.current.start();
+      setListening(true);
+    } catch (e) {
+      console.error(e);
+    }
+  };
+
+  const stopListening = () => {
+    try {
+      recognitionRef.current?.stop?.();
+    } catch (e) {
+      console.error(e);
+    } finally {
+      setListening(false);
+    }
+  };
+
+  const resetTranscript = () => {
+    setTranscript("");
+  };
+
+  return {
+    transcript,
+    listening,
+    browserSupportsSpeechRecognition,
+    resetTranscript,
+    startListening,
+    stopListening,
+  };
+}
 
 export default function InterviewSection() {
   const dispatch = useAppDispatch();
@@ -98,15 +181,15 @@ export default function InterviewSection() {
   const finalTextRef = useRef("");
   const evaluationInterruptedRef = useRef(false);
 
-
-  /* ---------------- SpeechRecognition HOOK ---------------- */
+  /* ---------------- Custom speech hook (replacing react-speech-recognition) ---------------- */
   const {
     transcript,
     listening,
     browserSupportsSpeechRecognition,
     resetTranscript,
-  } = useSpeechRecognition();
-
+    startListening,
+    stopListening,
+  } = useBrowserSpeechRecognition();
 
   /* ---------------- Sync transcript with UI ---------------- */
   useEffect(() => {
@@ -115,12 +198,10 @@ export default function InterviewSection() {
     finalTextRef.current = transcript;
   }, [transcript]);
 
-
   /* ---------- TTS cancel ---------- */
   const cancelSpeaking = useCallback(() => {
     if (typeof window !== "undefined") window.speechSynthesis.cancel();
   }, []);
-
 
   /* ---------- Speak Question ---------- */
   const speakQuestion = useCallback(
@@ -134,7 +215,7 @@ export default function InterviewSection() {
         u.rate = 1;
 
         u.onstart = () => {
-          SpeechRecognition.stopListening();
+          stopListening();
           setRecording(false);
         };
 
@@ -148,9 +229,8 @@ export default function InterviewSection() {
         toast.error("Speech synthesis failed");
       }
     },
-    []
+    [cancelSpeaking, stopListening] // toggleMic is defined later but stable via hoisting
   );
-
 
   /* ---------- Speak Evaluation ---------- */
   const speakEvaluation = useCallback(
@@ -166,7 +246,7 @@ export default function InterviewSection() {
         evaluationInterruptedRef.current = false;
 
         u.onstart = () => {
-          SpeechRecognition.stopListening();
+          stopListening();
           setRecording(false);
         };
 
@@ -184,9 +264,8 @@ export default function InterviewSection() {
         toast.error("Speech output error");
       }
     },
-    [questionIndex, interviewData]
+    [cancelSpeaking, questionIndex, interviewData, stopListening]
   );
-
 
   /* ---------- Toggle mic ---------- */
   const toggleMic = () => {
@@ -196,23 +275,27 @@ export default function InterviewSection() {
     }
 
     if (listening) {
-      SpeechRecognition.stopListening();
+      stopListening();
       setRecording(false);
     } else {
       resetTranscript();
-      SpeechRecognition.startListening({ continuous: true, language: "en-US" });
+      startListening({ continuous: true, language: "en-US" });
       setRecording(true);
     }
   };
 
-
   /* ---------- Evaluate ---------- */
   const handleSubmitAnswer = async () => {
-    SpeechRecognition.stopListening();
+    stopListening();
     setRecording(false);
 
     const ans = finalTextRef.current || finalText;
     draftAnswersRef.current[questionIndex] = ans;
+
+    if (!ans.trim()) {
+      toast.info("Please speak or type your answer.");
+      return;
+    }
 
     setEvaluating(true);
     setLoading(true);
@@ -235,7 +318,6 @@ export default function InterviewSection() {
     }
   };
 
-
   /* ---------- Next Question ---------- */
   const proceedToNext = useCallback(() => {
     cancelSpeaking();
@@ -256,8 +338,7 @@ export default function InterviewSection() {
     } else {
       toast.success("Interview finished");
     }
-  }, [questionIndex, interviewData, speakQuestion]);
-
+  }, [cancelSpeaking, questionIndex, interviewData, speakQuestion, resetTranscript]);
 
   /* ---------- Manual actions ---------- */
   const handleManualNext = () => {
@@ -274,7 +355,6 @@ export default function InterviewSection() {
     speakQuestion(interviewData?.questions?.[questionIndex]?.question);
   };
 
-
   /* ---------- Mic Permissions ---------- */
   const requestMic = async () => {
     try {
@@ -287,7 +367,6 @@ export default function InterviewSection() {
       return false;
     }
   };
-
 
   /* ---------- START INTERVIEW ---------- */
   const handleStart = async () => {
@@ -305,7 +384,10 @@ export default function InterviewSection() {
         setStarted(true);
         draftAnswersRef.current = {};
 
-        setTimeout(() => speakQuestion(response.data.questions[0].question), 400);
+        setTimeout(
+          () => speakQuestion(response.data.questions[0].question),
+          400
+        );
       } else toast.error(response.error);
     } catch {
       toast.error("Unexpected error");
@@ -314,11 +396,10 @@ export default function InterviewSection() {
     }
   };
 
-
   /* ---------- RESET ---------- */
   const handleReset = () => {
     cancelSpeaking();
-    SpeechRecognition.stopListening();
+    stopListening();
     resetTranscript();
 
     setStarted(false);
@@ -335,14 +416,15 @@ export default function InterviewSection() {
     setQuestionFeedback(null);
   };
 
-
   /* ---------- Report ---------- */
   const handleGenerateReport = async () => {
     if (!interviewData) return;
 
     setLoading(true);
     try {
-      const res: any = await dispatch(generateFeedback({ interviewId: interviewData._id }));
+      const res: any = await dispatch(
+        generateFeedback({ interviewId: interviewData._id })
+      );
       if (res?.success) {
         setShowPopup(false);
         setShowReport(true);
@@ -354,7 +436,6 @@ export default function InterviewSection() {
     }
   };
 
-
   /* ---------- Device Compatibility check ---------- */
   useEffect(() => {
     if (typeof window === "undefined") return;
@@ -362,7 +443,8 @@ export default function InterviewSection() {
     const device = detectDevice();
     const browser = detectBrowser();
 
-    navigator.mediaDevices.getUserMedia({ audio: true })
+    navigator.mediaDevices
+      .getUserMedia({ audio: true })
       .then((stream) => {
         stream.getTracks().forEach((t) => t.stop());
         setCompatibility({
@@ -384,14 +466,10 @@ export default function InterviewSection() {
       });
   }, [browserSupportsSpeechRecognition]);
 
-
-
   /* =============================== UI FULL CODE =============================== */
   return (
     <ProtectedRoute>
       <div className="min-h-[80vh] flex flex-col items-center justify-center px-4 relative">
-
-
         {/* ================= POPUPS AND UI BELOW ================= */}
         <AnimatePresence>
           {showMicPermissionPopup && (
@@ -436,30 +514,45 @@ export default function InterviewSection() {
                     {compatibility.mic ? (
                       <span className="text-green-400 font-semibold">✔ Enabled</span>
                     ) : (
-                      <span className="text-red-400 font-semibold">✘ Blocked / Not Accessible</span>
+                      <span className="text-red-400 font-semibold">
+                        ✘ Blocked / Not Accessible
+                      </span>
                     )}
                   </p>
                   <p>
-                    <span className="font-semibold text-voxy-text">Speech Recognition:</span>{" "}
+                    <span className="font-semibold text-voxy-text">
+                      Speech Recognition:
+                    </span>{" "}
                     {compatibility.recognition ? (
-                      <span className="text-green-400 font-semibold">✔ Supported</span>
+                      <span className="text-green-400 font-semibold">
+                        ✔ Supported
+                      </span>
                     ) : (
-                      <span className="text-red-400 font-semibold">✘ Not Supported</span>
+                      <span className="text-red-400 font-semibold">
+                        ✘ Not Supported
+                      </span>
                     )}
                   </p>
                   <p>
-                    <span className="font-semibold text-voxy-text">Voice Output:</span>{" "}
+                    <span className="font-semibold text-voxy-text">
+                      Voice Output:
+                    </span>{" "}
                     {compatibility.synthesis ? (
-                      <span className="text-green-400 font-semibold">✔ Supported</span>
+                      <span className="text-green-400 font-semibold">
+                        ✔ Supported
+                      </span>
                     ) : (
-                      <span className="text-red-400 font-semibold">✘ Not Supported</span>
+                      <span className="text-red-400 font-semibold">
+                        ✘ Not Supported
+                      </span>
                     )}
                   </p>
                 </div>
 
                 {!compatibility.recognition && (
                   <p className="text-xs text-red-400 mt-3">
-                    ⚠ Speech recognition is not supported on this device. Use typing or keyboard mic.
+                    ⚠ Speech recognition is not supported on this device. Use typing or
+                    keyboard mic.
                   </p>
                 )}
 
@@ -485,7 +578,6 @@ export default function InterviewSection() {
           )}
         </AnimatePresence>
 
-
         {/* =================== INTERVIEW OR SETUP SCREEN =================== */}
         <AnimatePresence mode="wait">
           {!started ? (
@@ -503,12 +595,16 @@ export default function InterviewSection() {
                 Describe your target role & job description to get tailored questions.
               </p>
 
-
               {/* Role input */}
               <div className="mb-4 text-left">
-                <label className="text-sm text-voxy-muted mb-2 block">Target Role</label>
+                <label className="text-sm text-voxy-muted mb-2 block">
+                  Target Role
+                </label>
                 <div className="relative">
-                  <Briefcase size={18} className="absolute left-3 top-1/2 -translate-y-1/2 text-voxy-muted"/>
+                  <Briefcase
+                    size={18}
+                    className="absolute left-3 top-1/2 -translate-y-1/2 text-voxy-muted"
+                  />
                   <input
                     type="text"
                     placeholder="e.g. Frontend Developer"
@@ -519,10 +615,11 @@ export default function InterviewSection() {
                 </div>
               </div>
 
-
               {/* Details input */}
               <div className="mb-6 text-left">
-                <label className="text-sm text-voxy-muted mb-2 block">Job Description / Focus Areas</label>
+                <label className="text-sm text-voxy-muted mb-2 block">
+                  Job Description / Focus Areas
+                </label>
                 <textarea
                   rows={4}
                   value={details}
@@ -534,7 +631,6 @@ export default function InterviewSection() {
                   The more information you provide, the smarter the questions.
                 </p>
               </div>
-
 
               {/* Start button */}
               <motion.button
@@ -549,7 +645,8 @@ export default function InterviewSection() {
               >
                 {loading ? (
                   <>
-                    <Loader2 className="animate-spin" size={18} /> Preparing interview...
+                    <Loader2 className="animate-spin" size={18} /> Preparing
+                    interview...
                   </>
                 ) : (
                   <>
@@ -558,7 +655,9 @@ export default function InterviewSection() {
                 )}
               </motion.button>
 
-              <p className="text-[11px] text-voxy-muted mt-3">Ensure your microphone works.</p>
+              <p className="text-[11px] text-voxy-muted mt-3">
+                Ensure your microphone works.
+              </p>
             </motion.div>
           ) : (
             /* =================== INTERVIEW SCREEN =================== */
@@ -571,27 +670,38 @@ export default function InterviewSection() {
             >
               <div className="flex flex-col md:flex-row items-start md:items-center justify-between mb-4 gap-4">
                 <div className="text-left">
-                  <h2 className="text-2xl font-bold text-voxy-text">AI Interview Session</h2>
+                  <h2 className="text-2xl font-bold text-voxy-text">
+                    AI Interview Session
+                  </h2>
                   <p className="text-voxy-muted text-sm">
-                    Question {questionIndex + 1} / {interviewData?.questions?.length}
+                    Question {questionIndex + 1} /{" "}
+                    {interviewData?.questions?.length}
                   </p>
                 </div>
 
                 <div className="flex gap-2 flex-wrap">
-                  <button onClick={handleRepeatQuestion} className="p-2 rounded-md border border-voxy-border text-voxy-muted text-sm flex items-center gap-1">
+                  <button
+                    onClick={handleRepeatQuestion}
+                    className="p-2 rounded-md border border-voxy-border text-voxy-muted text-sm flex items-center gap-1"
+                  >
                     <RotateCcw size={16} /> Repeat
                   </button>
 
-                  <button onClick={handleSkipQuestion} className="p-2 rounded-md border border-voxy-border text-voxy-muted text-sm flex items-center gap-1">
+                  <button
+                    onClick={handleSkipQuestion}
+                    className="p-2 rounded-md border border-voxy-border text-voxy-muted text-sm flex items-center gap-1"
+                  >
                     <SkipForward size={16} /> Skip
                   </button>
 
-                  <button onClick={handleReset} className="p-2 rounded-md border border-voxy-border text-voxy-muted text-sm">
+                  <button
+                    onClick={handleReset}
+                    className="p-2 rounded-md border border-voxy-border text-voxy-muted text-sm"
+                  >
                     Reset
                   </button>
                 </div>
               </div>
-
 
               {/* ================== QUESTION BOX ================== */}
               <div className="bg-voxy-surface/70 border border-voxy-border rounded-xl p-4 sm:p-6 mb-6 text-left shadow-lg">
@@ -602,7 +712,6 @@ export default function InterviewSection() {
                   </p>
                 </div>
               </div>
-
 
               {/* ================== MIC BUTTON ================== */}
               <div className="mb-4 cursor-pointer" onClick={toggleMic}>
@@ -626,10 +735,11 @@ export default function InterviewSection() {
                 )}
               </div>
 
-
               {/* ================== USER RESPONSE AREA ================== */}
               <div className="w-full max-w-2xl mx-auto text-left mb-6">
-                <h3 className="text-sm text-voxy-muted font-semibold mb-2">Your Response</h3>
+                <h3 className="text-sm text-voxy-muted font-semibold mb-2">
+                  Your Response
+                </h3>
 
                 <div className="p-4 bg-voxy-surface/60 border border-voxy-border rounded-lg text-sm text-voxy-text min-h-[120px]">
                   {finalText || interimText ? (
@@ -645,19 +755,28 @@ export default function InterviewSection() {
                       className="w-full bg-transparent resize-none outline-none text-voxy-text"
                     />
                   ) : (
-                    <div className="text-voxy-muted italic">Your speech or text will appear here...</div>
+                    <div className="text-voxy-muted italic">
+                      Your speech or text will appear here...
+                    </div>
                   )}
                 </div>
-
 
                 {/* ================= ACTION BUTTONS ================= */}
                 <div className="flex gap-3 flex-wrap mt-4">
                   <motion.button
-                    whileHover={!loading && !evaluating && (finalText || interimText) ? { scale: 1.03 } : {}}
+                    whileHover={
+                      !loading && !evaluating && (finalText || interimText)
+                        ? { scale: 1.03 }
+                        : {}
+                    }
                     onClick={handleSubmitAnswer}
-                    disabled={loading || evaluating || (!finalText && !interimText)}
-                    className={`px-4 py-2 rounded-lg font-semibold flex items-center gap-2 text-sm ${
+                    disabled={
                       loading || evaluating || (!finalText && !interimText)
+                    }
+                    className={`px-4 py-2 rounded-lg font-semibold flex items-center gap-2 text-sm ${
+                      loading ||
+                      evaluating ||
+                      (!finalText && !interimText)
                         ? "bg-voxy-border text-voxy-muted cursor-not-allowed"
                         : "bg-gradient-to-r from-voxy-primary to-voxy-secondary text-voxy-text"
                     }`}
@@ -698,7 +817,6 @@ export default function InterviewSection() {
                 </div>
               </div>
 
-
               {/* ================= EVALUATION RESULTS ================= */}
               {questionFeedback && (
                 <motion.div
@@ -719,7 +837,8 @@ export default function InterviewSection() {
                   </p>
 
                   <div className="mt-4 flex gap-3 flex-wrap">
-                    {questionIndex < (interviewData?.questions?.length ?? 0) - 1 ? (
+                    {questionIndex <
+                    (interviewData?.questions?.length ?? 0) - 1 ? (
                       <button
                         onClick={handleManualNext}
                         className="px-4 py-2 rounded-lg bg-gradient-to-r from-voxy-primary to-voxy-secondary text-voxy-text text-sm"
@@ -756,7 +875,6 @@ export default function InterviewSection() {
           )}
         </AnimatePresence>
 
-
         {/* =================== INTERVIEW COMPLETE POPUP =================== */}
         <AnimatePresence>
           {showPopup && (
@@ -772,12 +890,18 @@ export default function InterviewSection() {
                 exit={{ scale: 0.95, opacity: 0 }}
                 className="bg-voxy-surface/90 border border-voxy-border rounded-2xl shadow-2xl p-8 sm:p-10 text-center w-full max-w-md relative"
               >
-                <CheckCircle2 className="text-voxy-primary mx-auto mb-4" size={48} />
+                <CheckCircle2
+                  className="text-voxy-primary mx-auto mb-4"
+                  size={48}
+                />
 
-                <h3 className="text-xl sm:text-2xl font-bold text-voxy-text">Interview Completed!</h3>
+                <h3 className="text-xl sm:text-2xl font-bold text-voxy-text">
+                  Interview Completed!
+                </h3>
 
                 <p className="text-voxy-muted mb-8 text-sm">
-                  View your detailed feedback report to understand your strengths & improvement areas.
+                  View your detailed feedback report to understand your strengths &
+                  improvement areas.
                 </p>
 
                 <div className="flex gap-4 flex-wrap justify-center">
@@ -786,7 +910,11 @@ export default function InterviewSection() {
                     onClick={handleGenerateReport}
                     className="px-6 py-3 rounded-lg bg-gradient-to-r from-voxy-primary to-voxy-secondary text-voxy-text text-sm font-semibold"
                   >
-                    {loading ? <Loader2 className="animate-spin" /> : "View Report"}
+                    {loading ? (
+                      <Loader2 className="animate-spin" />
+                    ) : (
+                      "View Report"
+                    )}
                   </motion.button>
 
                   <motion.button
@@ -801,7 +929,6 @@ export default function InterviewSection() {
             </motion.div>
           )}
         </AnimatePresence>
-
 
         {/* =================== REPORT VIEW =================== */}
         <AnimatePresence>
@@ -833,8 +960,6 @@ export default function InterviewSection() {
             </motion.div>
           )}
         </AnimatePresence>
-
-
       </div>
     </ProtectedRoute>
   );
