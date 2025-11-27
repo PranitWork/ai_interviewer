@@ -85,14 +85,23 @@ function useBrowserSpeechRecognition() {
     recognition.lang = "en-US";
 
     recognition.onresult = (event: any) => {
-      let combined = "";
-      for (let i = event.resultIndex; i < event.results.length; i++) {
-        combined += event.results[i][0].transcript;
+      try {
+        let combined = "";
+        for (let i = event.resultIndex; i < event.results.length; i++) {
+          combined += event.results[i][0].transcript;
+        }
+        setTranscript(combined);
+      } catch (err) {
+        console.error("Speech result error:", err);
       }
-      setTranscript(combined);
     };
 
     recognition.onend = () => {
+      setListening(false);
+    };
+
+    recognition.onerror = (event: any) => {
+      console.error("Speech recognition error:", event?.error);
       setListening(false);
     };
 
@@ -118,7 +127,8 @@ function useBrowserSpeechRecognition() {
       recognitionRef.current.start();
       setListening(true);
     } catch (e) {
-      console.error(e);
+      console.error("startListening error:", e);
+      setListening(false);
     }
   };
 
@@ -126,7 +136,7 @@ function useBrowserSpeechRecognition() {
     try {
       recognitionRef.current?.stop?.();
     } catch (e) {
-      console.error(e);
+      console.error("stopListening error:", e);
     } finally {
       setListening(false);
     }
@@ -176,12 +186,15 @@ export default function InterviewSection() {
     browser: "Detecting...",
   });
 
+  const [isMobile, setIsMobile] = useState(false);
+
   /* ---------------------- REFS ---------------------- */
   const draftAnswersRef = useRef<Record<number, string>>({});
   const finalTextRef = useRef("");
   const evaluationInterruptedRef = useRef(false);
+  const textAreaRef = useRef<HTMLTextAreaElement | null>(null);
 
-  /* ---------------- Custom speech hook (replacing react-speech-recognition) ---------------- */
+  /* ---------------- Custom speech hook ---------------- */
   const {
     transcript,
     listening,
@@ -220,8 +233,11 @@ export default function InterviewSection() {
         };
 
         u.onend = () => {
-          const isMobile = /iPhone|iPad|iPod|Android/i.test(navigator.userAgent);
-          if (!isMobile) setTimeout(() => toggleMic(), 400);
+          const isMobileUA = /iPhone|iPad|iPod|Android/i.test(
+            navigator.userAgent
+          );
+          // On desktop we can auto-start mic, on mobile we let keyboard mic handle it
+          if (!isMobileUA) setTimeout(() => toggleMic(), 400);
         };
 
         window.speechSynthesis.speak(u);
@@ -229,7 +245,7 @@ export default function InterviewSection() {
         toast.error("Speech synthesis failed");
       }
     },
-    [cancelSpeaking, stopListening] // toggleMic is defined later but stable via hoisting
+    [cancelSpeaking, stopListening] // toggleMic is defined below; closure will see latest value at runtime
   );
 
   /* ---------- Speak Evaluation ---------- */
@@ -269,11 +285,25 @@ export default function InterviewSection() {
 
   /* ---------- Toggle mic ---------- */
   const toggleMic = () => {
+    // Mobile fallback: no WebSpeech => focus textarea and let keyboard mic work
     if (!browserSupportsSpeechRecognition) {
-      toast.error("Speech recognition not supported on this device.");
-      return;
+      if (isMobile) {
+        if (textAreaRef.current) {
+          textAreaRef.current.focus();
+        }
+        toast.info(
+          "Tap the microphone icon on your keyboard to speak. Your voice will be converted to text here."
+        );
+        return;
+      } else {
+        toast.error(
+          "Speech recognition is not supported in this browser. Please type your answer."
+        );
+        return;
+      }
     }
 
+    // Web Speech API path (desktop Chrome, some Android Chrome, etc.)
     if (listening) {
       stopListening();
       setRecording(false);
@@ -310,7 +340,8 @@ export default function InterviewSection() {
       setQuestionFeedback(fb);
 
       speakEvaluation(fb?.feedback?.comment || fb?.feedback);
-    } catch {
+    } catch (err) {
+      console.error("Evaluation error:", err);
       toast.error("Evaluation failed");
     } finally {
       setEvaluating(false);
@@ -338,7 +369,13 @@ export default function InterviewSection() {
     } else {
       toast.success("Interview finished");
     }
-  }, [cancelSpeaking, questionIndex, interviewData, speakQuestion, resetTranscript]);
+  }, [
+    cancelSpeaking,
+    questionIndex,
+    interviewData,
+    speakQuestion,
+    resetTranscript,
+  ]);
 
   /* ---------- Manual actions ---------- */
   const handleManualNext = () => {
@@ -358,11 +395,16 @@ export default function InterviewSection() {
   /* ---------- Mic Permissions ---------- */
   const requestMic = async () => {
     try {
+      if (!navigator.mediaDevices || !navigator.mediaDevices.getUserMedia) {
+        setMicBlocked(true);
+        return false;
+      }
       const stream = await navigator.mediaDevices.getUserMedia({ audio: true });
       stream.getTracks().forEach((t) => t.stop());
       setMicBlocked(false);
       return true;
-    } catch {
+    } catch (err) {
+      console.error("getUserMedia error:", err);
       setMicBlocked(true);
       return false;
     }
@@ -373,7 +415,7 @@ export default function InterviewSection() {
     if (!role.trim()) return toast.info("Enter role name");
 
     const ok = await requestMic();
-    if (!ok) return toast.error("Microphone access required");
+    if (!ok) return toast.error("Microphone access required or blocked.");
 
     setLoading(true);
     try {
@@ -388,9 +430,10 @@ export default function InterviewSection() {
           () => speakQuestion(response.data.questions[0].question),
           400
         );
-      } else toast.error(response.error);
-    } catch {
-      toast.error("Unexpected error");
+      } else toast.error(response.error || "Failed to start interview");
+    } catch (err) {
+      console.error("Start interview error:", err);
+      toast.error("Unexpected error starting interview");
     } finally {
       setLoading(false);
     }
@@ -428,8 +471,11 @@ export default function InterviewSection() {
       if (res?.success) {
         setShowPopup(false);
         setShowReport(true);
+      } else {
+        toast.error("Failed to generate report");
       }
-    } catch {
+    } catch (err) {
+      console.error("Report error:", err);
       toast.error("Report failed");
     } finally {
       setLoading(false);
@@ -442,6 +488,19 @@ export default function InterviewSection() {
 
     const device = detectDevice();
     const browser = detectBrowser();
+    const isMobileUA = /Android|iPhone|iPad|iPod/i.test(navigator.userAgent);
+    setIsMobile(isMobileUA);
+
+    if (!navigator.mediaDevices || !navigator.mediaDevices.getUserMedia) {
+      setCompatibility({
+        mic: false,
+        recognition: browserSupportsSpeechRecognition || isMobileUA,
+        synthesis: !!window.speechSynthesis,
+        device,
+        browser,
+      });
+      return;
+    }
 
     navigator.mediaDevices
       .getUserMedia({ audio: true })
@@ -449,16 +508,18 @@ export default function InterviewSection() {
         stream.getTracks().forEach((t) => t.stop());
         setCompatibility({
           mic: true,
-          recognition: browserSupportsSpeechRecognition,
+          // We treat mobile as "recognition possible" via keyboard mic
+          recognition: browserSupportsSpeechRecognition || isMobileUA,
           synthesis: !!window.speechSynthesis,
           device,
           browser,
         });
       })
-      .catch(() => {
+      .catch((err) => {
+        console.error("Mic compatibility error:", err);
         setCompatibility({
           mic: false,
-          recognition: browserSupportsSpeechRecognition,
+          recognition: browserSupportsSpeechRecognition || isMobileUA,
           synthesis: !!window.speechSynthesis,
           device,
           browser,
@@ -512,7 +573,9 @@ export default function InterviewSection() {
                   <p>
                     <span className="font-semibold text-voxy-text">Microphone:</span>{" "}
                     {compatibility.mic ? (
-                      <span className="text-green-400 font-semibold">✔ Enabled</span>
+                      <span className="text-green-400 font-semibold">
+                        ✔ Enabled
+                      </span>
                     ) : (
                       <span className="text-red-400 font-semibold">
                         ✘ Blocked / Not Accessible
@@ -525,11 +588,11 @@ export default function InterviewSection() {
                     </span>{" "}
                     {compatibility.recognition ? (
                       <span className="text-green-400 font-semibold">
-                        ✔ Supported
+                        ✔ Available
                       </span>
                     ) : (
                       <span className="text-red-400 font-semibold">
-                        ✘ Not Supported
+                        ✘ Limited / Not Supported
                       </span>
                     )}
                   </p>
@@ -551,8 +614,8 @@ export default function InterviewSection() {
 
                 {!compatibility.recognition && (
                   <p className="text-xs text-red-400 mt-3">
-                    ⚠ Speech recognition is not supported on this device. Use typing or
-                    keyboard mic.
+                    ⚠ Speech recognition is limited on this device. You can always
+                    type your answers or use your keyboard&apos;s mic if available.
                   </p>
                 )}
 
@@ -725,10 +788,12 @@ export default function InterviewSection() {
                   <Mic size={36} className="text-voxy-text" />
                 </div>
                 <p className="text-voxy-muted text-sm mt-2">
-                  {listening ? "Listening... tap to stop" : "Tap the mic to start speaking"}
+                  {listening
+                    ? "Listening... tap to stop"
+                    : "Tap the mic to start speaking"}
                 </p>
 
-                {!compatibility.recognition && (
+                {!browserSupportsSpeechRecognition && !isMobile && (
                   <p className="text-[11px] text-red-400 mt-1">
                     Speech recognition not supported. Type or use keyboard mic.
                   </p>
@@ -744,6 +809,8 @@ export default function InterviewSection() {
                 <div className="p-4 bg-voxy-surface/60 border border-voxy-border rounded-lg text-sm text-voxy-text min-h-[120px]">
                   {finalText || interimText ? (
                     <textarea
+                      id="voxy-answer-textarea"
+                      ref={textAreaRef}
                       value={finalText}
                       onChange={(e) => {
                         const v = e.target.value;
@@ -755,9 +822,20 @@ export default function InterviewSection() {
                       className="w-full bg-transparent resize-none outline-none text-voxy-text"
                     />
                   ) : (
-                    <div className="text-voxy-muted italic">
-                      Your speech or text will appear here...
-                    </div>
+                    <textarea
+                      id="voxy-answer-textarea"
+                      ref={textAreaRef}
+                      value={finalText}
+                      onChange={(e) => {
+                        const v = e.target.value;
+                        setFinalText(v);
+                        finalTextRef.current = v;
+                        draftAnswersRef.current[questionIndex] = v;
+                      }}
+                      rows={6}
+                      placeholder="Your speech or text will appear here..."
+                      className="w-full bg-transparent resize-none outline-none text-voxy-text italic"
+                    />
                   )}
                 </div>
 
