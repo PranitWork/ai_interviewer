@@ -194,6 +194,8 @@ export default function InterviewSection() {
   const finalTextRef = useRef("");
   const evaluationInterruptedRef = useRef(false);
   const textAreaRef = useRef<HTMLTextAreaElement | null>(null);
+  const listeningTestRef = useRef(false);
+
 
   /* ---------------- Custom speech hook ---------------- */
   const {
@@ -284,26 +286,44 @@ export default function InterviewSection() {
   );
 
   /* ---------- Toggle mic ---------- */
-  const toggleMic = () => {
-    // If browser doesn't support Web Speech, show guide popup instead
-    if (!browserSupportsSpeechRecognition) {
-      if (textAreaRef.current) {
-        textAreaRef.current.focus();
-      }
-      setShowSpeechGuidePopup(true);
-      return;
-    }
+const toggleMic = () => {
+  // If browser doesn't support Web Speech API => show fallback immediately
+  if (!browserSupportsSpeechRecognition) {
+    setShowSpeechGuidePopup(true);
+    if (textAreaRef.current) textAreaRef.current.focus();
+    return;
+  }
 
-    // Web Speech API path (desktop Chrome, some Android Chrome)
-    if (listening) {
-      stopListening();
-      setRecording(false);
-    } else {
-      resetTranscript();
-      startListening({ continuous: true, language: "en-US" });
-      setRecording(true);
-    }
-  };
+  // Try starting real recognition test
+  if (!listening) {
+    resetTranscript();
+    listeningTestRef.current = true;
+    startListening({ continuous: true, language: "en-US" });
+    setRecording(true);
+
+    // Detect false-positive support (Android bug)
+    setTimeout(() => {
+      if (listeningTestRef.current && transcript.trim() === "") {
+        stopListening();
+        setRecording(false);
+        setShowSpeechGuidePopup(true);
+
+        // focus text area and open keyboard
+        if (textAreaRef.current) {
+          textAreaRef.current.focus();
+          const el = document.getElementById("voxy-answer-textarea");
+          el?.focus();
+        }
+      }
+    }, 5000);
+
+  } else {
+    stopListening();
+    setRecording(false);
+    listeningTestRef.current = false;
+  }
+};
+
 
   /* ---------- Evaluate ---------- */
   const handleSubmitAnswer = async () => {
