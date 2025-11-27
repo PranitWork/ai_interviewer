@@ -187,6 +187,7 @@ export default function InterviewSection() {
   });
 
   const [isMobile, setIsMobile] = useState(false);
+  const [showSpeechGuidePopup, setShowSpeechGuidePopup] = useState(false);
 
   /* ---------------------- REFS ---------------------- */
   const draftAnswersRef = useRef<Record<number, string>>({});
@@ -236,7 +237,6 @@ export default function InterviewSection() {
           const isMobileUA = /iPhone|iPad|iPod|Android/i.test(
             navigator.userAgent
           );
-          // On desktop we can auto-start mic, on mobile we let keyboard mic handle it
           if (!isMobileUA) setTimeout(() => toggleMic(), 400);
         };
 
@@ -245,7 +245,7 @@ export default function InterviewSection() {
         toast.error("Speech synthesis failed");
       }
     },
-    [cancelSpeaking, stopListening] // toggleMic is defined below; closure will see latest value at runtime
+    [cancelSpeaking, stopListening] // toggleMic is defined below; closure sees runtime value
   );
 
   /* ---------- Speak Evaluation ---------- */
@@ -285,25 +285,16 @@ export default function InterviewSection() {
 
   /* ---------- Toggle mic ---------- */
   const toggleMic = () => {
-    // Mobile fallback: no WebSpeech => focus textarea and let keyboard mic work
+    // If browser doesn't support Web Speech, show guide popup instead
     if (!browserSupportsSpeechRecognition) {
-      if (isMobile) {
-        if (textAreaRef.current) {
-          textAreaRef.current.focus();
-        }
-        toast.info(
-          "Tap the microphone icon on your keyboard to speak. Your voice will be converted to text here."
-        );
-        return;
-      } else {
-        toast.error(
-          "Speech recognition is not supported in this browser. Please type your answer."
-        );
-        return;
+      if (textAreaRef.current) {
+        textAreaRef.current.focus();
       }
+      setShowSpeechGuidePopup(true);
+      return;
     }
 
-    // Web Speech API path (desktop Chrome, some Android Chrome, etc.)
+    // Web Speech API path (desktop Chrome, some Android Chrome)
     if (listening) {
       stopListening();
       setRecording(false);
@@ -508,7 +499,6 @@ export default function InterviewSection() {
         stream.getTracks().forEach((t) => t.stop());
         setCompatibility({
           mic: true,
-          // We treat mobile as "recognition possible" via keyboard mic
           recognition: browserSupportsSpeechRecognition || isMobileUA,
           synthesis: !!window.speechSynthesis,
           device,
@@ -531,7 +521,7 @@ export default function InterviewSection() {
   return (
     <ProtectedRoute>
       <div className="min-h-[80vh] flex flex-col items-center justify-center px-4 relative">
-        {/* ================= POPUPS AND UI BELOW ================= */}
+        {/* ============ MIC PERMISSION POPUP ============ */}
         <AnimatePresence>
           {showMicPermissionPopup && (
             <motion.div
@@ -634,6 +624,74 @@ export default function InterviewSection() {
                     className="px-6 py-3 rounded-lg border border-voxy-border text-voxy-muted text-sm font-semibold"
                   >
                     Continue
+                  </button>
+                </div>
+              </motion.div>
+            </motion.div>
+          )}
+        </AnimatePresence>
+
+        {/* ============ SPEECH GUIDE POPUP (WHEN NO WEB SPEECH) ============ */}
+        <AnimatePresence>
+          {showSpeechGuidePopup && (
+            <motion.div
+              initial={{ opacity: 0 }}
+              animate={{ opacity: 1 }}
+              exit={{ opacity: 0 }}
+              className="fixed inset-0 z-50 bg-black/60 backdrop-blur-md flex items-center justify-center p-4"
+            >
+              <motion.div
+                initial={{ scale: 0.95, opacity: 0 }}
+                animate={{ scale: 1, opacity: 1 }}
+                exit={{ scale: 0.95, opacity: 0 }}
+                className="bg-voxy-surface border border-voxy-border rounded-2xl p-6 sm:p-8 max-w-md w-full text-center shadow-2xl relative"
+              >
+                <button
+                  onClick={() => setShowSpeechGuidePopup(false)}
+                  className="absolute top-4 right-4 text-voxy-muted hover:text-voxy-text"
+                >
+                  <X size={20} />
+                </button>
+
+                <h2 className="text-xl sm:text-2xl font-bold text-voxy-text mb-2">
+                  Use Voice Input on Your Device 🎙️
+                </h2>
+
+                <p className="text-sm text-voxy-muted mb-5">
+                  This browser doesn&apos;t support automatic speech recognition, but
+                  you can still answer using your keyboard&apos;s microphone.
+                </p>
+
+                <div className="bg-voxy-surface/70 border border-voxy-border rounded-xl p-4 text-left text-sm space-y-2">
+                  <p className="font-semibold text-voxy-text mb-1">
+                    How to record your answer:
+                  </p>
+                  <ol className="list-decimal list-inside space-y-1 text-voxy-muted">
+                    <li>Tap inside the &quot;Your Response&quot; box.</li>
+                    <li>Your keyboard will open.</li>
+                    <li>
+                      Tap the <span className="font-semibold">🎤 microphone</span> icon{" "}
+                      on your keyboard.
+                    </li>
+                    <li>Speak your answer clearly.</li>
+                    <li>
+                      When text appears, review it and click{" "}
+                      <span className="font-semibold">Submit Answer</span>.
+                    </li>
+                  </ol>
+                </div>
+
+                <p className="text-[11px] text-voxy-muted mt-3">
+                  Tip: Most Android &amp; iOS keyboards (like Gboard, Apple Keyboard)
+                  have a built-in mic icon for voice typing.
+                </p>
+
+                <div className="flex gap-3 justify-center mt-6 flex-wrap">
+                  <button
+                    onClick={() => setShowSpeechGuidePopup(false)}
+                    className="px-6 py-3 rounded-lg bg-gradient-to-r from-voxy-primary to-voxy-secondary text-voxy-text text-sm font-semibold"
+                  >
+                    OK, I Understand
                   </button>
                 </div>
               </motion.div>
